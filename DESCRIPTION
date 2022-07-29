@@ -1,0 +1,39 @@
+Package: tRackIT
+Title: Process data recorded with automatic radio-tracking stations
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Jannis",
+           family = "Gottwald",
+           role = c("aut", "cre"),
+           email = "jannis.gottwald@geo.uni-marburg.de",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: The functionalities provided in the tRackIT package cover project and individual management, raw signal data processing and the generation of high-level information such as the calculation of locations and the classification of behavioral states based on pattern in the recorded vhf-signals. It provides a default data structure to guarantee easy exchangeability of data and analysis scripts between scientists 
+License: `use_mit_license()`, `use_gpl3_license()` or friends to
+    pick a license
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    telemetr,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Imports: 
+    dplyr,
+    plyr,
+    zoo,
+    imputeTS,
+    stringr,
+    data.table,
+    raster,
+    sp,
+    doSNOW,
+    reshape2,
+    foreach,
+    trip,
+    StreamMetabolism
+Remotes:
+    andrewuhl/RollingWindow
+Config/testthat/edition: 3
