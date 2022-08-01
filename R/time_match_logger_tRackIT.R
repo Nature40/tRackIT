@@ -17,8 +17,31 @@
 
 
 
-time_match_logger_tRackIT<-function(animal, path_to_data){
+time_match_logger_tRackIT<-function(animal=NULL, path_to_data){
+  
+  if(is.null(animal)){
+    stop("No animal file provided. Please see ?initAnimal or ?getAnimal")
+  }
+  
+  
+  if(!file.exists(path_to_data)){
+    
+    stop(paste0("File: ", path_to_data, " does not exist"))
+  }
+  
   data<-data.table::fread(path_to_data)
+  
+  nms_actual<-colnames(data)
+  
+  nms_expected<-c("timestamp", "station", "receiver", "max")
+  
+  if(!all(nms_expected %in% nms_actual)){
+    
+    idx<-nms_expected %in% nms_actual
+    
+    stop(paste0("Required column " , nms_expected[!idx]," not found! "))
+  }
+  
   
   data<-data[!is.na(data$max),]
   
