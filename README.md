@@ -6,10 +6,10 @@ The tRackIT R-Package provides functionalities for the processing of data record
 
 The package uses functionalities from the awsome [telemetr](https://github.com/barryrowlingson/telemetr) R-Package developed by Barry Rowlingson. It provides all methods for the localization of a transmitter described in [this article](https://doi.org/10.2307/1268030). To make use of the dependencies however, some adjustments to the package had to be conducted, which is why the version used in the tRackIT R-package is hostet under the Nature40 github account. Before the tRackIT package can be installed, please install the telemtr package as follows:
 
-'''
+```
 library(remotes)
 Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")
 remotes::install_github("Nature40/telemetr")
-'''
+```
 
 
