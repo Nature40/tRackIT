@@ -16,7 +16,7 @@
 #' # predict
 #' activity_predict_tRackIT(animal = anml)
 #'
-activity_predict_tRackIT <- function(animal = NULL) {
+activity_predict_tRackIT <- function(animal = NULL, get_data=FALSE) {
   
   # define pipe operator
   

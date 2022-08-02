@@ -18,7 +18,7 @@
 #'
 
 
-activity_aggregate_tRackIT <- function(animal, avalue, tzone) {
+activity_aggregate_tRackIT <- function(animal, avalue, tzone, get_data=FALSE) {
 
   # calculates the most frequent value
   Mode <- function(x) {
