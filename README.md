@@ -23,7 +23,7 @@ devtools::install_github("Nature40/tRackIT")
 
 ## Test data and models
 
-To check out the functionalities of the package, we recommend to download the test data and [trained models]( https://doi.org/10.17192/fdr/79) for activity classification. They are also used in the package vignette. 
+To check out the functionalities of the package using the package vignette, we recommend to download the test data and [trained models]( https://doi.org/10.17192/fdr/79) for activity classification. Models need to be unzipped and stored in the extdata folder of the installed tRackIT-package. 
 
 
 
