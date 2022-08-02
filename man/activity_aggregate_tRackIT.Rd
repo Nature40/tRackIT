@@ -12,6 +12,8 @@ activity_aggregate_tRackIT(animal, avalue, tzone)
 \item{avalue}{numeric, aggregation interval in minutes}
 
 \item{tzone}{string, Timezone of time data}
+
+\item{get_data}{logical, if TRUE classification will be returned as data.frame and stored in the classification folder. If FALSE classification will only be stored}
 }
 \description{
 aggregates the activity classification to user specified intervalls of "avalue" minutes by using the class with max entries (mode) in interval
