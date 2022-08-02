@@ -15,7 +15,8 @@ getAnimal(projroot = ".", animalID)
 reads anmimal file from animal root
 }
 \examples{
-getAnimal(projroot="/test_project/", animalID="woodpecker")
+getAnimal(projroot = "/test_project/", animalID = "woodpecker")
+
 }
 \author{
 Jannis Gottwald

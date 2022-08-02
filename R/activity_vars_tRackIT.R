@@ -20,23 +20,26 @@
 #' # calculate activity vars
 #' activity_vars_tRackIT(animal = anml, tcol = "timestamp", scol = "max", dcol = "receiver", tzone = "CET", rscale = 0)
 #'
+
+
 activity_vars_tRackIT <- function(animal, tcol, scol, dcol, tzone, rscale = 0) {
 
   # matching function
   d <- function(x, y) abs(x - y)
 
-
+  #get filtered files
   fls <- list.files(animal$path$filtered, full.names = TRUE)
-
+  
+  #error handling
   if (length(fls) == 0) {
     stop("No files available from input directory")
   }
-
+  
   # create variables per filtered file
   lapply(fls, function(x) {
+    
     data <- data.table::fread(x)
     data <- as.data.frame(data)
-
     # rename columns
     data$max_signal <- data[, scol]
     # scale to dbw if necessary
@@ -44,7 +47,7 @@ activity_vars_tRackIT <- function(animal, tcol, scol, dcol, tzone, rscale = 0) {
     data$timestamp <- data[, tcol]
     data$receiver <- data[, dcol]
 
-    # deal with timestamp format inconsitence
+    # deal with timestamp format inconsitencies
     data$timestamp <- gsub("T", " ", data$timestamp)
     data$timestamp <- gsub("Z", "", data$timestamp)
     data$timestamp <- as.POSIXct(data$timestamp, tz = tzone)
@@ -56,8 +59,7 @@ activity_vars_tRackIT <- function(animal, tcol, scol, dcol, tzone, rscale = 0) {
 
 
     # identify receiver with highest number of data points per 5 minute bin
-
-    df <- plyr::ldply(lst1, function(k) {
+     df <- plyr::ldply(lst1, function(k) {
       tmp <- k[k$receiver == tail(names(sort(table(k$receiver))), 1)[1], ]
 
 
@@ -71,15 +73,12 @@ activity_vars_tRackIT <- function(animal, tcol, scol, dcol, tzone, rscale = 0) {
 
         # if number of data points of second receiver is at least 80% of first receiver variables such as co-variance can be calculated
         if ((nrow(tmp2) / nrow(tmp)) >= 0.8 & (tail(names(sort(table(k$receiver))), 2)[1] != tail(names(sort(table(k$receiver))), 1)[1])) {
+          
           tmp$time_control1 <- tmp$timestamp
           tmp2$time_control2 <- tmp2$timestamp
-
           tmp2$max_signal_2 <- tmp2$max_signal
 
-
-
           tmp2 <- tmp2[, c("timestamp", "max_signal_2", "time_control2")]
-
           idx <- sapply(tmp$timestamp, function(x) which.min(d(x, tmp2$timestamp))) # find matches
 
           match <- cbind(tmp, tmp2[idx, -1, drop = FALSE])
@@ -110,33 +109,32 @@ activity_vars_tRackIT <- function(animal, tcol, scol, dcol, tzone, rscale = 0) {
 
     if (nrow(df) > 100) {
 
-
-
-      # print("2 reveivers variables")
+   #calculate varialbes for 2 receivers
       df <- df[order(df$timestamp), ]
+      
       if (nrow(df[!is.na(df$max_signal_2), ]) > 100) {
+        
         df$diff <- abs(df$max_signal - df$max_signal_2)
+        
         df$diff_std <- RollingWindow::RollingStd(x = df$diff, window = 10, na_method = "window")
       } else {
         df$diff <- NA
-        # df$diff_var<-NA
         df$diff_std <- NA
-        # df$cor_max<-NA
-        # df$cov_max<-NA
       }
 
 
-      # print("1 receiver variables")
+      # 1 receiver variables
 
       # smooth data with max, mean and hampel
 
-      # print("hampel")
       hampel_1 <- pracma::hampel(x = df$max_signal, k = 10, t0 = 1)
       df$hampel <- hampel_1$y
+      
       df$max <- RollingWindow::RollingMax(x = df$max_signal, window = 10, na_method = "window")
+      
       df$mean <- RollingWindow::RollingMean(x = df$max_signal, window = 10, na_method = "window")
+      
       df$skew <- RollingWindow::RollingSkew(x = df$max_signal, window = 10, na_method = "window")
-
 
       df$sumsq <- RollingWindow::RollingSS(x = df$max_signal, window = 10, na_method = "window")
 
@@ -150,28 +148,31 @@ activity_vars_tRackIT <- function(animal, tcol, scol, dcol, tzone, rscale = 0) {
 
       # calculate variables on hampel smoothed signals
       df$var_hampel <- RollingWindow::RollingVar(x = df$hampel, window = 10, na_method = "window")
+      
       df$std_hampel <- RollingWindow::RollingStd(x = df$hampel, window = 10, na_method = "window")
+      
       df$sumsq_hampel <- RollingWindow::RollingSS(x = df$hampel, window = 10, na_method = "window")
 
       # write file per station to variable folder
       data.table::fwrite(df, paste0(animal$path$vars, "/", basename(x)))
-      
-   
-
-      # deprecated variables
-      # df$var<-RollingWindow::RollingVar(x = df$max_signal, window = 10, na_method = "window")
-      # df$std<-RollingWindow::RollingStd(x = df$max_signal, window = 10, na_method = "window")
-      # df$kurt<-RollingWindow::RollingKurt(x = df$max_signal, window = 10, na_method = "window")
 
 
-      # df$diff_var<-RollingWindow::RollingVar(x = df$diff, window = 10, na_method = "window")
-      # df$cor_max<-RollingWindow::RollingCorr(x = df$max_signal, y=df$max_signal_2, window = 10, na_method = "window")
-      # df$cov_max<-RollingWindow::RollingCov(x = df$max_signal, y=df$max_signal_2, window = 10, na_method = "window")
-
-      # df$var_mean<-RollingWindow::RollingVar(x = df$mean, window = 10, na_method = "window")
-      # df$std_mean<-RollingWindow::RollingStd(x = df$mean, window = 10, na_method = "window")
-      # df$var_max<-RollingWindow::RollingVar(x = df$max, window = 10, na_method = "window")
-      # df$std_max<-RollingWindow::RollingStd(x = df$max, window = 10, na_method = "window")
     }
   })
 }
+
+
+# deprecated variables
+# df$var<-RollingWindow::RollingVar(x = df$max_signal, window = 10, na_method = "window")
+# df$std<-RollingWindow::RollingStd(x = df$max_signal, window = 10, na_method = "window")
+# df$kurt<-RollingWindow::RollingKurt(x = df$max_signal, window = 10, na_method = "window")
+
+
+# df$diff_var<-RollingWindow::RollingVar(x = df$diff, window = 10, na_method = "window")
+# df$cor_max<-RollingWindow::RollingCorr(x = df$max_signal, y=df$max_signal_2, window = 10, na_method = "window")
+# df$cov_max<-RollingWindow::RollingCov(x = df$max_signal, y=df$max_signal_2, window = 10, na_method = "window")
+
+# df$var_mean<-RollingWindow::RollingVar(x = df$mean, window = 10, na_method = "window")
+# df$std_mean<-RollingWindow::RollingStd(x = df$mean, window = 10, na_method = "window")
+# df$var_max<-RollingWindow::RollingVar(x = df$max, window = 10, na_method = "window")
+# df$std_max<-RollingWindow::RollingStd(x = df$max, window = 10, na_method = "window")

@@ -4,7 +4,7 @@
 \alias{time_match_logger_tRackIT}
 \title{time match logger data}
 \usage{
-time_match_logger_tRackIT(animal, path_to_data)
+time_match_logger_tRackIT(animal = NULL, path_to_data)
 }
 \arguments{
 \item{path_to_data}{string, path to filtered data}
@@ -13,6 +13,14 @@ time_match_logger_tRackIT(animal, path_to_data)
 }
 \description{
 timematch of simoultaneously received signals by logger of one station
+}
+\examples{
+projroot <- "/test_project/"
+p <- getProject(projroot)
+animal <- getAnimal(projroot, animalID = "woodpecker")
+fls <- list.files(animal$path$filtered, full.names = TRUE)
+lapply(fls, function(x) time_match_logger_tRackIT(animal, x))
+
 }
 \author{
 Jannis Gottwald

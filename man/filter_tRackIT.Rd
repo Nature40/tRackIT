@@ -5,7 +5,7 @@
 \title{filter automatic (tRackIT.OS)}
 \usage{
 filter_tRackIT(
-  animal,
+  animal = NULL,
   freq_er = 2,
   path_to_data = NULL,
   d_min = NULL,
@@ -37,7 +37,8 @@ Filtering of raw signals based on transmitter frequency, signal duration and run
 }
 \examples{
 anml <- getAnimal(projList = test_project, projroot = "test_project/", animalID = "woodpecker")
-filter_tRackIT(animal=anml, freq_er=2, path_to_data="/test_project/data/logger_data_csv/", d_min=anml$meta$duration_min, d_max=anml$meta$duration_max, freq=anml$meta$freq, start=anml$meta$start, end=anml$meta$end)
+filter_tRackIT(animal = anml, freq_er = 2, path_to_data = "/test_project/data/logger_data_csv/", d_min = anml$meta$duration_min, d_max = anml$meta$duration_max, freq = anml$meta$freq, start = anml$meta$start, end = anml$meta$end)
+
 }
 \author{
 Jannis Gottwald

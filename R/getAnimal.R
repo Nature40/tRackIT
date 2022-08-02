@@ -12,28 +12,26 @@
 #'
 #' @export
 #'
-#'@examples
-#'getAnimal(projroot="/test_project/", animalID="woodpecker")
+#' @examples
+#' getAnimal(projroot = "/test_project/", animalID = "woodpecker")
+#'
 
 
-
-
-getAnimal <- function(projroot=".", animalID) {
+getAnimal <- function(projroot = ".", animalID) {
   
   
-  
-  if(projroot=="."){
+  #error handling
+  if (projroot == ".") {
     stop("No root directory provided")
   }
-  
-  if(file.exists(paste0(projroot,"/data/individuals/", animalID, "/", animalID, "_idFile.rds"))==FALSE){
-    stop(paste0("There is no animalID file called: ", paste0(projroot,"/data/individuals/", animalID, "/", animalID, "_idFile.rds. "), "Use tRackIT::initAnimal() to create a new animalID file"))
+  if (file.exists(paste0(projroot, "/data/individuals/", animalID, "/", animalID, "_idFile.rds")) == FALSE) {
+    stop(paste0("There is no animalID file called: ", paste0(projroot, "/data/individuals/", animalID, "/", animalID, "_idFile.rds. "), "Use tRackIT::initAnimal() to create a new animalID file"))
   }
+
+  animal <- readRDS(paste0(projroot, "/data/individuals/", animalID, "/", animalID, "_idFile.rds"))
   
-  animal <- readRDS(paste0(projroot,"/data/individuals/", animalID, "/", animalID, "_idFile.rds"))
-
+  #adjust filepath
   animal$path <- lapply(animal$path, function(x) paste0(projroot, x))
-
-
+  
   return(animal)
 }

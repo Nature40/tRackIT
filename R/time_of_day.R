@@ -5,7 +5,7 @@
 #'
 #' @author Jannis Gottwald
 #'
-#' @param data data.frame, data with timestamps 
+#' @param data data.frame, data with timestamps
 #' @param tcol string, colname of timestamp column
 #' @param Lat numeric, reference latitude for sunrise/sunset calculation
 #' @param Lon numeric, reference longitude for sunrise/sunset calculation
@@ -17,24 +17,14 @@
 
 
 
-time_of_day<-function(data,  Lat, Lon, tcol, tz, activity_period){
- if(activity_period=="nocturnal"){
-  
-  
-  results<-nocturnal(data=data, Lat=Lat, Lon=Lon, tcol = tcol, tz = tz)
-  return(results)
-  
+time_of_day <- function(data, Lat, Lon, tcol, tz, activity_period) {
+  if (activity_period == "nocturnal") {
+    results <- nocturnal(data = data, Lat = Lat, Lon = Lon, tcol = tcol, tz = tz)
+    return(results)
+  }
+
+  if (activity_period == "diurnal") {
+    results <- diurnal(data = data, Lat = Lat, Lon = Lon, tcol = tcol, tz = tz)
+    return(results)
+  }
 }
-
-if(activity_period=="diurnal"){
-  
-  
-  results<-diurnal(data=data, Lat=Lat, Lon=Lon, tcol = tcol, tz = tz)
-  return(results)
-  
-}
-
-}
-
-
-

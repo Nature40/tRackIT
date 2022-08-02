@@ -34,45 +34,43 @@
 #'
 initProject <- function(projroot = ".",
                         logger_data_raw,
-                        tags=NULL,
+                        tags = NULL,
                         id_col = NULL,
                         start_col = NULL,
                         end_col = NULL,
                         freq_col = NULL,
                         dmin_col = NULL,
                         dmax_col = NULL,
-                        stations=NULL,
+                        stations = NULL,
                         s_col,
                         x_col,
                         y_col,
                         r_col,
                         o_col,
-                        epsg=NULL,
-                        tz=NULL) {
-  
- 
-  if(is.null(epsg)){
+                        epsg = NULL,
+                        tz = NULL) {
+  if (is.null(epsg)) {
     stop("A epsg code is mandatory. If you are unsure about the epsg code for your spatial reference system please check: https://spatialreference.org/ref/epsg/")
   }
-  
-  if(is.null(tz)){
+
+  if (is.null(tz)) {
     stop("The timezone of your project needs to be provided (e.g.CET for central europe)")
   }
-  
-  if(projroot=="."){
+
+  if (projroot == ".") {
     stop("No root directory provided")
   }
-  
-  if(is.null(tags)){
+
+  if (is.null(tags)) {
     stop("No tags data.frame provided")
   }
-  
-  if(is.null(stations)){
+
+  if (is.null(stations)) {
     stop("No tags data.frame provided")
   }
-  
-  
-  
+
+
+
   rtRoot(projroot)
   # create project sturture
   dir.create(paste0(projroot, "data/catalogues/"), showWarnings = FALSE)

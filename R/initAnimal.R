@@ -26,12 +26,12 @@
 #' # get project file
 #' test_project <- getProject(projroot = projroot, plot = TRUE)
 #' # init animal
-#' initAnimal(projList = test_project,projroot= "test_project/",saveAnml = TRUE, animalID = test_project$tags$ID[1], species = "woodpecker", sex = "m", age = "adult", weight = 36, rep.state = "breeding", freq = test_project$tags$frequency[1], start = test_project$tags$start[1], end = test_project$tags$end[1], duration_min = 0.012, duration_max = 0.4 )
+#' initAnimal(projList = test_project, projroot = "test_project/", saveAnml = TRUE, animalID = test_project$tags$ID[1], species = "woodpecker", sex = "m", age = "adult", weight = 36, rep.state = "breeding", freq = test_project$tags$frequency[1], start = test_project$tags$start[1], end = test_project$tags$end[1], duration_min = 0.012, duration_max = 0.4)
 #'
-initAnimal <- function(projList=NULL,
-                       projroot=".",
+initAnimal <- function(projList = NULL,
+                       projroot = ".",
                        saveAnml = FALSE,
-                       animalID=NULL,
+                       animalID = NULL,
                        species = NA,
                        sex = NA,
                        age = NA,
@@ -42,43 +42,41 @@ initAnimal <- function(projList=NULL,
                        end = NA,
                        duration_min = NA,
                        duration_max = NA) {
-  
-  
-  if(is.null(projList)){
+  if (is.null(projList)) {
     stop("No project information provided (projList=Null). See ?initProject or ?getProject")
   }
-  
-  if(is.null(animalID)){
+
+  if (is.null(animalID)) {
     stop("No animalID provided")
   }
-  
-  if(is.na(freq)){
+
+  if (is.na(freq)) {
     stop("No tag frequency provided (something like 150153)")
   }
-  
-  if(is.na(start)){
+
+  if (is.na(start)) {
     stop("No start date of the tagging period provided")
   }
-  
-  if(is.na(end)){
+
+  if (is.na(end)) {
     stop("No end date of the tagging period provided")
   }
-  
-  if(is.na(duration_min)){
+
+  if (is.na(duration_min)) {
     stop("No expected minimum duration of signals is provided. This is important for signal filtering. Set it low (0) if you are unsure.")
   }
-  
-  if(is.na(duration_max)){
+
+  if (is.na(duration_max)) {
     stop("No expected maximum duration of signals is provided. This is important for signal filtering. Set it high (100) if you are unsure.")
   }
-  
-  
-  if(projroot=="."){
+
+
+  if (projroot == ".") {
     stop("No root directory provided")
   }
-  
-  
-  if(class(projList)!=class(list())){
+
+
+  if (class(projList) != class(list())) {
     stop("projList seems to be in the wrong format")
   }
 

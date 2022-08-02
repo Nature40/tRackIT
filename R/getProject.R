@@ -16,27 +16,26 @@
 #' test_project <- getProject(projroot = "/test_project/", plot = TRUE)
 #'
 getProject <- function(projroot = ".", plot = FALSE) {
-  
-  if(projroot=="."){
+  if (projroot == ".") {
     stop("No root directory provided")
   }
-  
-  if(file.exists(paste0(projroot, basename(projroot), "_projectFile.rds"))==FALSE){
+
+  if (file.exists(paste0(projroot, basename(projroot), "_projectFile.rds")) == FALSE) {
     stop(paste0("There is no project file called: ", paste0(projroot, basename(projroot), "_projectFile.rds. ", "Use tRackIT::initProject() to create a new project file")))
   }
-  
- 
-  
+
+
+
   project <- readRDS(paste0(projroot, basename(projroot), "_projectFile.rds"))
-  
-  
-  
-  
+
+
+
+
   b <- projroot
-  #complete path
+  # complete path
   project$path <- lapply(project$path, function(x) paste0(b, x))
 
-  #plot map
+  # plot map
   if (plot == TRUE) {
     stations <- project$stations
     epsg <- project$epsg

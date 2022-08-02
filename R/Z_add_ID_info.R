@@ -1,4 +1,4 @@
-#' adds meta data 
+#' adds meta data
 #'
 #' @description adds meta data from idFile.rds to data
 #'
@@ -15,22 +15,18 @@
 
 
 
-add.ID.Info<-function( animal, data){
-  
- 
-  
-  data$ID<-animal$meta$animalID
-  
-  data$species<-animal$meta$species
-  
-  data$sex<-animal$meta$sex
+add.ID.Info <- function(animal, data) {
+  data$ID <- animal$meta$animalID
 
-  data$age<-animal$meta$age
-  
-  data$weight<-animal$meta$weight
-  
-  data$rep.state<-animal$meta$rep.state
-  
+  data$species <- animal$meta$species
+
+  data$sex <- animal$meta$sex
+
+  data$age <- animal$meta$age
+
+  data$weight <- animal$meta$weight
+
+  data$rep.state <- animal$meta$rep.state
+
   return(data)
-  
 }
