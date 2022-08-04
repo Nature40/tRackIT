@@ -90,6 +90,7 @@ tRackIT <- function(animal, projList, tw = 5, be_col = "bearings_filtered", path
   ######### Triangulate
   print("triangulate")
   tri_points <- plyr::ldply(unique(be$tc), .progress = "text", function(ti) {
+    
     tmp <- be[be$tc == ti, ]
     # print(head(tmp))
 
