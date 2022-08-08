@@ -165,7 +165,15 @@ tRackIT <- function(animal, projList, tw = 5, be_col = "bearings_filtered", path
     # print("end gc")
   })
 
-  print("calc dist")
+  data.table::fwrite(tri_points, paste0(animal$path$triangulations, "/triangulations", "_time_window", "_", tw, ".csv"))
+  
+}
+  
+ 
+dist_to_stats<-function(tri_points){
+
+
+ print("calc dist")
 
   print(head(tri_points))
 
@@ -197,5 +205,5 @@ tRackIT <- function(animal, projList, tw = 5, be_col = "bearings_filtered", path
 
 
 
-  data.table::fwrite(tri_points, paste0(animal$path$triangulations, "/triangulations", "_time_window", "_", tw, ".csv"))
+  
 }
