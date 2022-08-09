@@ -164,46 +164,78 @@ tRackIT <- function(animal, projList, tw = 5, be_col = "bearings_filtered", path
 
     # print("end gc")
   })
-
-  data.table::fwrite(tri_points, paste0(animal$path$triangulations, "/triangulations", "_time_window", "_", tw, ".csv"))
   
-}
+  print("calc dist")
   
- 
-dist_to_stats<-function(tri_points){
-
-
- print("calc dist")
-
   print(head(tri_points))
-
+  
   tri_points$dist_to_max_station <- round(raster::pointDistance(cbind(tri_points$x_max_station, tri_points$y_max_station), cbind(tri_points$x, tri_points$y), lonlat = T))
-
-
-
+  
+  
+  
   closest_station <- vector()
   dist_to_closest_station <- vector()
   ant_tst <- stations
-
+  
   print("dist to stations")
   for (n in 1:nrow(tri_points)) {
-
-
+    
+    
     # print(n)
     ant_tst$dist <- NA
     # print(i)
     ant_tst$dist <- round(raster::pointDistance(cbind(tri_points$x[n], tri_points$y[n]), cbind(stations$X, stations$Y), lonlat = T))
     # print(min(ant_tst$dist))
     closest_station[n] <- as.character(ant_tst$station[ant_tst$dist == min(ant_tst$dist)][1])
-
+    
     dist_to_closest_station[n] <- min(ant_tst$dist)
   }
-
+  
   tri_points$closest_station <- closest_station
   tri_points$dist_to_closest_station <- dist_to_closest_station
+  
+  
+  
 
-
-
-
+  data.table::fwrite(tri_points, paste0(animal$path$triangulations, "/triangulations", "_time_window", "_", tw, ".csv"))
   
 }
+  
+ 
+# dist_to_stats<-function(tri_points){
+# 
+# 
+#  print("calc dist")
+# 
+#   print(head(tri_points))
+# 
+#   tri_points$dist_to_max_station <- round(raster::pointDistance(cbind(tri_points$x_max_station, tri_points$y_max_station), cbind(tri_points$x, tri_points$y), lonlat = T))
+# 
+# 
+# 
+#   closest_station <- vector()
+#   dist_to_closest_station <- vector()
+#   ant_tst <- stations
+# 
+#   print("dist to stations")
+#   for (n in 1:nrow(tri_points)) {
+# 
+# 
+#     # print(n)
+#     ant_tst$dist <- NA
+#     # print(i)
+#     ant_tst$dist <- round(raster::pointDistance(cbind(tri_points$x[n], tri_points$y[n]), cbind(stations$X, stations$Y), lonlat = T))
+#     # print(min(ant_tst$dist))
+#     closest_station[n] <- as.character(ant_tst$station[ant_tst$dist == min(ant_tst$dist)][1])
+# 
+#     dist_to_closest_station[n] <- min(ant_tst$dist)
+#   }
+# 
+#   tri_points$closest_station <- closest_station
+#   tri_points$dist_to_closest_station <- dist_to_closest_station
+# 
+# 
+# 
+# 
+#   
+# }
