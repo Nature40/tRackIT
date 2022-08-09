@@ -18,7 +18,7 @@ classifies data based on ML variables
 # get animal
 anml <- getAnimal(projList = test_project, projroot = "/test_project/", animalID = "woodpecker")
 # predict
-activity_predict_tRackIT(animal = anml)
+activity_predict_tRackIT(animal = anml, get_data=TRUE)
 
 }
 \author{
