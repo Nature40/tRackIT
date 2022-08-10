@@ -37,7 +37,8 @@ Imports:
     rgdal,
     pracma,
     caret,
-    randomForest
+    randomForest,
+    lattice
 Remotes:
     andrewuhl/RollingWindow
 Config/testthat/edition: 3
