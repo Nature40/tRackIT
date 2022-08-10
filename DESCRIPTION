@@ -35,7 +35,9 @@ Imports:
     trip,
     StreamMetabolism,
     rgdal,
-    pracma
+    pracma,
+    caret,
+    randomForest
 Remotes:
     andrewuhl/RollingWindow
 Config/testthat/edition: 3
