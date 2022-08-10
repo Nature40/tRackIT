@@ -23,6 +23,7 @@
 #' @param epsg numeric, epsg code of the coordinate system of stations coordinates- will be transformed to latlon
 #' @param tz string, timezone of project
 #' @param dmax_col string, name of the column in tags data.frame containing the max duration of the transmitter signal in seconds (10ms=0.01 sec)
+#' 
 #' @export
 #' @examples
 #' 

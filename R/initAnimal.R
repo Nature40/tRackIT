@@ -20,6 +20,7 @@
 #' @param duration_min numeric, minimum duration of single signal
 #' @param duration_max numeric, maximum duration of single signal
 #' @param logical, if TRUE animal file will be stored
+#' @param saveAnml logical, if TRUE animal list will be stored as .rds an can be loaded with getAnml()
 #'
 #' @export
 #'

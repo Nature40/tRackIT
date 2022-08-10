@@ -26,6 +26,8 @@ initAnimal(
 
 \item{projroot}{string, project directory}
 
+\item{saveAnml}{logical, if TRUE animal list will be stored as .rds an can be loaded with getAnml()}
+
 \item{animalID}{string, label of the tagged individual}
 
 \item{species}{string, species of the tagged individual}
