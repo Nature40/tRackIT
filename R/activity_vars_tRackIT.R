@@ -18,7 +18,7 @@
 #' # get animal
 #' anml <- getAnimal(projList = test_project, projroot = "/test_project/", animalID = "woodpecker")
 #' # calculate activity vars
-#' activity_vars_tRackIT(animal = anml, tcol = "timestamp", scol = "max", dcol = "receiver", tzone = "CET", rscale = 0)
+#' activity_vars_tRackIT(animal = anml, tcol = "timestamp", s_col = "max", dcol = "receiver", tzone = "CET", rscale = 0)
 #'
 
 
@@ -41,7 +41,7 @@ activity_vars_tRackIT <- function(animal, t_col, s_col, r_col, tz, rscale = 0) {
     data <- data.table::fread(x)
     data <- as.data.frame(data)
     # rename columns
-    data$max_signal <- data[, scol]
+    data$max_signal <- data[, s_col]
     # scale to dbw if necessary
     data$max_signal <- data$max_signal - rscale
     data$timestamp <- data[, tcol]
