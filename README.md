@@ -14,7 +14,14 @@ Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")
 remotes::install_github("Nature40/telemetr")
 ```
 
-then
+We also make use of very fast c++ based [rolling windows](https://github.com/andrewuhl/RollingWindow) which are not hostet on cran, yet. Please install the package as follows:
+
+```
+devtools::install_github("andrewuhl/RollingWindow")
+```
+
+
+Now you can install the tRackIT R-package
 
 ```
 devtools::install_github("Nature40/tRackIT")
