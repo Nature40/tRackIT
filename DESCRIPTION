@@ -8,8 +8,7 @@ Authors@R:
            email = "jannis.gottwald@geo.uni-marburg.de",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: The functionalities provided in the tRackIT package cover project and individual management, raw signal data processing and the generation of high-level information such as the calculation of locations and the classification of behavioral states based on pattern in the recorded vhf-signals. It provides a default data structure to guarantee easy exchangeability of data and analysis scripts between scientists. 
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
