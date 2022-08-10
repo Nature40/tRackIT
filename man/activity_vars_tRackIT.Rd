@@ -26,7 +26,7 @@ calculates variables for the ML-based activity classification
 # get animal
 anml <- getAnimal(projList = test_project, projroot = "/test_project/", animalID = "woodpecker")
 # calculate activity vars
-activity_vars_tRackIT(animal = anml, tcol = "timestamp", s_col = "max", dcol = "receiver", tzone = "CET", rscale = 0)
+activity_vars_tRackIT(animal = anml, t_col = "timestamp", s_col = "max", r_col = "receiver", tzone = "CET", rscale = 0)
 
 }
 \author{
