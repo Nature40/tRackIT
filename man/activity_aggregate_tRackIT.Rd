@@ -19,7 +19,7 @@ activity_aggregate_tRackIT(animal, avalue, tzone, get_data = FALSE)
 aggregates the activity classification to user specified intervalls of "avalue" minutes by using the class with max entries (mode) in interval
 }
 \examples{
-anml <- getAnimal(projList = test_project, projroot = "test_project/", animalID = "woodpecker")
+anml<-getAnimal(projroot = "/test_project/", animalID = "woodpecker")
 activity_aggregate_tRackIT(animal = anml, avalue = 1, tzone = "CET")
 
 }
