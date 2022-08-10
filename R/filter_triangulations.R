@@ -12,7 +12,7 @@
 #' @param tw numeric, time window in which bearings are used for triangulation
 #' @param rerange numeric, max accepted reception range of single stations, points that are farer than rerange from loudest station will be filtered out
 #' @param nbi numeric, number of minimum succesul biangulations (intersections) in group
-#' @param speed numeric, maximum accepted speed between consecutive points
+#' @param max.speed numeric, maximum accepted speed between consecutive points
 #' @param tz string, timezone of data time
 #' @param tw numeric, time window of triangulations
 #' @param filter_speed logical, if TRUE speed filter will be applied
@@ -24,7 +24,7 @@
 
 
 
-filter.triangs.tRackIT <- function(animal, projList, rerange = 400, nbi = 1, speed = 20, tz = "UTC", filter_speed = TRUE, filter_distance = TRUE, filter_biang = TRUE, tw = 5) {
+filter.triangs.tRackIT <- function(animal, projList, rerange = 400, nbi = 1, max.speed = 20, tz = "UTC", filter_speed = TRUE, filter_distance = TRUE, filter_biang = TRUE, tw = 5) {
   epsg <- projList$epsg
   trilst <- list.files(animal$path$triangulations, pattern = paste0("time_window_", tw), full.names = TRUE)
 
@@ -66,7 +66,7 @@ filter.triangs.tRackIT <- function(animal, projList, rerange = 400, nbi = 1, spe
 
       summary(trp)
 
-      tp$spd <- trip::speedfilter(tp, max.speed = speed)
+      tp$spd <- trip::speedfilter(tp, max.speed = max.speed)
 
       tp <- as.data.frame(tp)
 

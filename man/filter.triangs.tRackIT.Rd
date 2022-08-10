@@ -9,7 +9,7 @@ filter.triangs.tRackIT(
   projList,
   rerange = 400,
   nbi = 1,
-  speed = 20,
+  max.speed = 20,
   tz = "UTC",
   filter_speed = TRUE,
   filter_distance = TRUE,
@@ -26,7 +26,7 @@ filter.triangs.tRackIT(
 
 \item{nbi}{numeric, number of minimum succesul biangulations (intersections) in group}
 
-\item{speed}{numeric, maximum accepted speed between consecutive points}
+\item{max.speed}{numeric, maximum accepted speed between consecutive points}
 
 \item{tz}{string, timezone of data time}
 
