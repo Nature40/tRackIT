@@ -6,6 +6,19 @@
 \usage{
 tri(x1, y1, alpha1, x2, y2, alpha2)
 }
+\arguments{
+\item{x1}{numeric, x-coordinate of station 1}
+
+\item{y1}{numeric, y-coordinate of station 1}
+
+\item{alpha1}{numeric, alpha value of station 1}
+
+\item{x2}{numeric, x-coordinate of station 2}
+
+\item{y2}{numeric, y-coordinate of station 2}
+
+\item{alpha2}{numeric, alpha value of station 2}
+}
 \description{
 tri
 }

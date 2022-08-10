@@ -1,5 +1,11 @@
 #' tri
 #'
+#' @param x1 numeric, x-coordinate of station 1
+#' @param x2 numeric, x-coordinate of station 2
+#' @param y1 numeric, y-coordinate of station 1
+#' @param y2 numeric, y-coordinate of station 2
+#' @param alpha1 numeric, alpha value of station 1
+#' @param alpha2 numeric, alpha value of station 2
 #' @export
 #'
 
