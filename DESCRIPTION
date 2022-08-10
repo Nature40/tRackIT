@@ -34,7 +34,8 @@ Imports:
     foreach,
     trip,
     StreamMetabolism,
-    rgdal
+    rgdal,
+    pracma
 Remotes:
     andrewuhl/RollingWindow
 Config/testthat/edition: 3
