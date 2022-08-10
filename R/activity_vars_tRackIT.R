@@ -18,7 +18,7 @@
 #' # get animal
 #' anml <- getAnimal(projList = test_project, projroot = "/test_project/", animalID = "woodpecker")
 #' # calculate activity vars
-#' activity_vars_tRackIT(animal = anml, t_col = "timestamp", s_col = "max", r_col = "receiver", tzone = "CET", rscale = 0)
+#' activity_vars_tRackIT(animal = anml, t_col = "timestamp", s_col = "max", r_col = "receiver", tz = "CET", rscale = 0)
 #'
 
 
@@ -50,11 +50,11 @@ activity_vars_tRackIT <- function(animal, t_col, s_col, r_col, tz, rscale = 0) {
     # deal with timestamp format inconsitencies
     data$timestamp <- gsub("T", " ", data$timestamp)
     data$timestamp <- gsub("Z", "", data$timestamp)
-    data$timestamp <- as.POSIXct(data$timestamp, tz = tzone)
+    data$timestamp <- as.POSIXct(data$timestamp, tz = tz)
 
     # split into five minute bins to deal with reception gaps
     lst1 <- split(data, droplevels(cut(as.POSIXct(data$timestamp,
-      format = "%Y-%m-%d %H:%M:%S", tz = tzone
+      format = "%Y-%m-%d %H:%M:%S", tz = tz
     ), breaks = "5 min")))
 
 
