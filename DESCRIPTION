@@ -33,7 +33,8 @@ Imports:
     reshape2,
     foreach,
     trip,
-    StreamMetabolism
+    StreamMetabolism,
+    rgdal
 Remotes:
     andrewuhl/RollingWindow
 Config/testthat/edition: 3
