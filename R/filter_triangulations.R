@@ -18,8 +18,7 @@
 #' @param filter_speed logical, if TRUE speed filter will be applied
 #' @param filter_distance,  if TRUE distance filter will be applied
 #' @param filter_biang,  if TRUE biang filter will be applied
-#'
-#'
+#' 
 #' @export
 #'
 
