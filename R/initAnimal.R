@@ -19,6 +19,7 @@
 #' @param end string, end of tracking YYYY-MM-DD
 #' @param duration_min numeric, minimum duration of single signal
 #' @param duration_max numeric, maximum duration of single signal
+#' @param logical, if TRUE animal file will be stored
 #'
 #' @export
 #'

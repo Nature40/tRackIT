@@ -9,7 +9,7 @@ dist_to_stat(data, projList)
 \arguments{
 \item{data}{data.frame, generatet by triangulation function}
 
-\item{antennas}{file, data.frame with antenna information (Lat,Lon,orientation)}
+\item{projList}{list, generatet by initProject function}
 }
 \description{
 calculates the distance of traingulations to the station with maxDB

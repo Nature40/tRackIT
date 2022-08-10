@@ -8,7 +8,8 @@
 #'
 #'
 #' @param data data.frame, generatet by triangulation function
-#' @param antennas file, data.frame with antenna information (Lat,Lon,orientation)
+#' @param projList list, generatet by initProject function
+#'
 #'
 #' @export
 #'

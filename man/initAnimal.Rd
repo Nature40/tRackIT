@@ -47,6 +47,8 @@ initAnimal(
 \item{duration_min}{numeric, minimum duration of single signal}
 
 \item{duration_max}{numeric, maximum duration of single signal}
+
+\item{logical, }{if TRUE animal file will be stored}
 }
 \description{
 Creates directories and a R list with all the needed tRackIT information for one animal. R list is stored as .rds in animals directory-projroot/data/individuals/animalID/animalID_idFile.rds

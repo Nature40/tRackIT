@@ -1,5 +1,5 @@
 #' Initialise a Radiotracking Project
-#'
+#' @param projroot string, path to home directory of the project
 #' @export
 #'
 

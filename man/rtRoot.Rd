@@ -6,6 +6,9 @@
 \usage{
 rtRoot(projroot = ".")
 }
+\arguments{
+\item{projroot}{string, path to home directory of the project}
+}
 \description{
 Initialise a Radiotracking Project
 }
