@@ -1,1 +1,1 @@
-store your classification models here
+store your classification models here, please. http://dx.doi.org/10.17192/fdr/79
