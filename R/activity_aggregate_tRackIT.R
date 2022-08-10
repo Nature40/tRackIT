@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-#' anml<-getAnimal(projroot = "/test_project/", animalID = "woodpecker")
+#' anml<-getAnimal(projroot = "/tRackIT_test_data/", animalID = "woodpecker")
 #' activity_aggregate_tRackIT(animal = anml, avalue = 1, tzone = "CET")
 #'
 
