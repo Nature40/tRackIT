@@ -16,11 +16,11 @@
 #'
 #' @examples
 #'
-#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
-#' p <- getProject(projroot)
-#' animal <- getAnimal(projroot =projroot, animalID = "woodpecker")
-#' m_logger <- list.files(animal$path$logger_timematch, full.names = TRUE)
-#' lapply(m_logger, function(x) calc_bearings_tRackIT(x, dbLoss = 21, animal = animal, projList = p))
+#' #projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' #p <- getProject(projroot)
+#' #animal <- getAnimal(projroot =projroot, animalID = "woodpecker")
+#' #m_logger <- list.files(animal$path$logger_timematch, full.names = TRUE)
+#' #lapply(m_logger, function(x) calc_bearings_tRackIT(x, dbLoss = 21, animal = animal, projList = p))
 #'
 calc_bearings_tRackIT <- function(path_to_data, dbLoss, animal, projList) {
   

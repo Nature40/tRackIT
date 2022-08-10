@@ -27,12 +27,12 @@ tRackIT(
 calculates triangulations
 }
 \examples{
-projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#projroot<-paste0(getwd(),"/tRackIT_test_data/")
 # get project file
-p <- getProject(projroot)
+#p <- getProject(projroot)
 # get meta data of 1 individual
-animal <- getAnimal(projroot, animalID = "woodpecker")
-tRackIT(animal = animal, projList = p, be_col = "bearings_filtered", tw = 5, path_to_directory = animal$path$bearings_filtered)
+#animal <- getAnimal(projroot, animalID = "woodpecker")
+#tRackIT(animal = animal, projList = p, be_col = "bearings_filtered", tw = 5, path_to_directory = animal$path$bearings_filtered)
 
 }
 \author{

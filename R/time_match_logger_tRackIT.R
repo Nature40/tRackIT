@@ -14,12 +14,12 @@
 #' @export
 #'
 #' @examples
-#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' #projroot<-paste0(getwd(),"/tRackIT_test_data/")
 #' 
-#' p <- getProject(projroot)
-#' animal <- getAnimal(projroot, animalID = "woodpecker")
-#' fls <- list.files(animal$path$filtered, full.names = TRUE)
-#' lapply(fls, function(x) time_match_logger_tRackIT(animal, x))
+#' #p <- getProject(projroot)
+#' #animal <- getAnimal(projroot, animalID = "woodpecker")
+#' #fls <- list.files(animal$path$filtered, full.names = TRUE)
+#' #lapply(fls, function(x) time_match_logger_tRackIT(animal, x))
 #'
 time_match_logger_tRackIT <- function(animal = NULL, path_to_data) {
   if (is.null(animal)) {

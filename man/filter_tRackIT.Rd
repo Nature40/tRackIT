@@ -36,9 +36,9 @@ filter_tRackIT(
 Filtering of raw signals based on transmitter frequency, signal duration and runtime of the transmitter. The function reads files from a given folder. Make shure that there is one file per station and that they have the following columns:timestamp= time of received signal-expected format: “\%Y-\%m-\%d \%H:\%M:\%S (e.g. 1970-01-29 15:30:22:11),  duration=signal length of the recorded signal, frequency= frequency in kHz (e.g. 150150.2),  max= the max signal strength in dBW of the recorded signal (peak) , receiver= name of the receiver device (usually 0,1,2,3 for a 4 Antenna station ), station= name of the station as character string
 }
 \examples{
-projroot<-paste0(getwd(),"/tRackIT_test_data/")
-anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
-filter_tRackIT(animal = anml, freq_er = 2, path_to_data = "/test_project/data/logger_data_csv/", d_min = anml$meta$duration_min, d_max = anml$meta$duration_max, freq = anml$meta$freq, start = anml$meta$start, end = anml$meta$end)
+#projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
+#filter_tRackIT(animal = anml, freq_er = 2, path_to_data = "/test_project/data/logger_data_csv/", d_min = anml$meta$duration_min, d_max = anml$meta$duration_max, freq = anml$meta$freq, start = anml$meta$start, end = anml$meta$end)
 
 }
 \author{

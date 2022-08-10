@@ -11,10 +11,10 @@
 #' @export
 #'
 #' @examples
-#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
-#' anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
+#' #projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' #anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
 #' # predict
-#' activity_predict_tRackIT(animal = anml, get_data=TRUE)
+#' #activity_predict_tRackIT(animal = anml, get_data=TRUE)
 #'
 activity_predict_tRackIT <- function(animal = NULL, get_data=FALSE) {
   

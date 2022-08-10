@@ -15,8 +15,8 @@ getAnimal(projroot = ".", animalID)
 reads anmimal file from animal root
 }
 \examples{
-projroot<-paste0(getwd(),"/tRackIT_test_data/")
-getAnimal(projroot = projroot, animalID = "woodpecker")
+#projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#getAnimal(projroot = projroot, animalID = "woodpecker")
 
 }
 \author{

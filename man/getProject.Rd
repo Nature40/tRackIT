@@ -16,8 +16,8 @@ reads project file from projroot
 }
 \examples{
 # get project
-projroot<-paste0(getwd(),"/tRackIT_test_data/")
-test_project <- getProject(projroot = projroot, plot = FALSE)
+#projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#test_project <- getProject(projroot = projroot, plot = FALSE)
 
 }
 \author{

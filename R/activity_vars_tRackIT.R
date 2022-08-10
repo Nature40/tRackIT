@@ -16,10 +16,10 @@
 #'
 #' @examples
 #' # get animal
-#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
-#' anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
+#' #projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' #anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
 #' # calculate activity vars
-#' activity_vars_tRackIT(animal = anml, t_col = "timestamp", s_col = "max", r_col = "receiver", tz = "CET", rscale = 0)
+#' #activity_vars_tRackIT(animal = anml, t_col = "timestamp", s_col = "max", r_col = "receiver", tz = "CET", rscale = 0)
 #'
 
 

@@ -13,8 +13,8 @@
 #' @export
 #'
 #' @examples
-#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
-#' getAnimal(projroot = projroot, animalID = "woodpecker")
+#' #projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' #getAnimal(projroot = projroot, animalID = "woodpecker")
 #'
 
 

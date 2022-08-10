@@ -13,9 +13,9 @@
 #' @export
 #'
 #' @examples
-#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
-#' anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
-#' activity_aggregate_tRackIT(animal = anml, avalue = 1, tzone = "CET")
+#' #projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' #anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
+#' #activity_aggregate_tRackIT(animal = anml, avalue = 1, tzone = "CET")
 #'
 
 

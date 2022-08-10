@@ -19,10 +19,10 @@ hampel_time(path_to_data, col, k, t0 = 0.5, animal)
 detect outliers in bearings using hampel filter in a moving time window
 }
 \examples{
-projroot<-paste0(getwd(),"/tRackIT_test_data/")
-animal <- getAnimal(projroot, animalID = "woodpecker")
-bearings <- list.files(animal$path$bearings, full.names = TRUE)
-lapply(bearings, function(x) hampel_time(path_to_data = x, col = "linear", animal = animal, k = 10))
+#projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#animal <- getAnimal(projroot, animalID = "woodpecker")
+#bearings <- list.files(animal$path$bearings, full.names = TRUE)
+#lapply(bearings, function(x) hampel_time(path_to_data = x, col = "linear", animal = animal, k = 10))
 
 }
 \author{
