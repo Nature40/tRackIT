@@ -14,7 +14,8 @@
 #' @export
 #'
 #' @examples
-#' projroot <- "/test_project/"
+#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' 
 #' p <- getProject(projroot)
 #' animal <- getAnimal(projroot, animalID = "woodpecker")
 #' fls <- list.files(animal$path$filtered, full.names = TRUE)

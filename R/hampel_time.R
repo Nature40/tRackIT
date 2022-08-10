@@ -17,7 +17,7 @@
 #' @export
 #'
 #' @examples
-#' projroot <- "/test_project/"
+#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
 #' animal <- getAnimal(projroot, animalID = "woodpecker")
 #' bearings <- list.files(animal$path$bearings, full.names = TRUE)
 #' lapply(bearings, function(x) hampel_time(path_to_data = x, col = "linear", animal = animal, k = 10))

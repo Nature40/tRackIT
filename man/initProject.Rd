@@ -63,11 +63,13 @@ initProject(
 Creates directories and a R list with all the needed tRackIT-Project information. R list is stored as .rds in projroot directory-projroot/projID_idFile.rds
 }
 \examples{
+
+projroot<-paste0(getwd(),"/tRackIT_test_data/")
 # data frame with id information
 tag_df <- data.frame(id = "woodpecker", freq = 150050, start = "2021-06-10", end = "2021-06-14", dmax = 0.025, dmin = 0.012)
 # data frame with tRackIt station information
 stations <- data.frame(station = "station1", receiver = c(0, 1, 2, 3), orientation = c(0, 90, 180, 270), X = 8.677942, Y = 50.84420)
-test_project <- initProject(projroot = "/test_project/", logger_data_raw = ".", tags = tag_df, id_col = "id", start_col = "start", end_col = "end", freq_col = "freq", dmin_col = "dmin", dmax_col = "dmax", stations = stations, s_col = "station", x_col = "X", y_col = "Y", r_col = "receiver", o_col = "orientation", epsg = 4326, tz = "CET")
+test_project <- initProject(projroot = projroot, logger_data_raw = ".", tags = tag_df, id_col = "id", start_col = "start", end_col = "end", freq_col = "freq", dmin_col = "dmin", dmax_col = "dmax", stations = stations, s_col = "station", x_col = "X", y_col = "Y", r_col = "receiver", o_col = "orientation", epsg = 4326, tz = "CET")
 tst$path
 
 }

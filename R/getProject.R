@@ -13,7 +13,8 @@
 #'
 #' @examples
 #' # get project
-#' test_project <- getProject(projroot = "/test_project/", plot = TRUE)
+#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' test_project <- getProject(projroot = projroot, plot = FALSE)
 #'
 getProject <- function(projroot = ".", plot = FALSE) {
   if (projroot == ".") {

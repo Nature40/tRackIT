@@ -15,7 +15,8 @@ time_match_logger_tRackIT(animal = NULL, path_to_data)
 timematch of simoultaneously received signals by logger of one station
 }
 \examples{
-projroot <- "/test_project/"
+projroot<-paste0(getwd(),"/tRackIT_test_data/")
+
 p <- getProject(projroot)
 animal <- getAnimal(projroot, animalID = "woodpecker")
 fls <- list.files(animal$path$filtered, full.names = TRUE)

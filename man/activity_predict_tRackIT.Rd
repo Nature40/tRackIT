@@ -15,8 +15,8 @@ activity_predict_tRackIT(animal = NULL, get_data = FALSE)
 classifies data based on ML variables
 }
 \examples{
-# get animal
-anml <- getAnimal(projList = test_project, projroot = "/test_project/", animalID = "woodpecker")
+projroot<-paste0(getwd(),"/tRackIT_test_data/")
+anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
 # predict
 activity_predict_tRackIT(animal = anml, get_data=TRUE)
 

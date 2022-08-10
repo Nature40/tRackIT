@@ -19,7 +19,8 @@
 #' @export
 #'
 #' @examples
-#' anml <- getAnimal(projList = test_project, projroot = "test_project/", animalID = "woodpecker")
+#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
+#' anml<-getAnimal(projroot =projroot, animalID = "woodpecker")
 #' filter_tRackIT(animal = anml, freq_er = 2, path_to_data = "/test_project/data/logger_data_csv/", d_min = anml$meta$duration_min, d_max = anml$meta$duration_max, freq = anml$meta$freq, start = anml$meta$start, end = anml$meta$end)
 #'
 

@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' projroot <- "/test_project/"
+#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
 #' # get project file
 #' p <- getProject(projroot)
 #' # get meta data of 1 individual

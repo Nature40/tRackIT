@@ -24,6 +24,7 @@
 #'
 #' @examples
 #' # get project file
+#' projroot<-paste0(getwd(),"/tRackIT_test_data/")
 #' test_project <- getProject(projroot = projroot, plot = TRUE)
 #' # init animal
 #' initAnimal(projList = test_project, projroot = "test_project/", saveAnml = TRUE, animalID = test_project$tags$ID[1], species = "woodpecker", sex = "m", age = "adult", weight = 36, rep.state = "breeding", freq = test_project$tags$frequency[1], start = test_project$tags$start[1], end = test_project$tags$end[1], duration_min = 0.012, duration_max = 0.4)
