@@ -38,8 +38,7 @@ Imports:
     caret,
     randomForest,
     lattice,
-    lubridate,
-    mapview
+    lubridate
 Remotes:
     andrewuhl/RollingWindow
 Config/testthat/edition: 3
