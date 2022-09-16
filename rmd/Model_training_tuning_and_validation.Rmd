@@ -1,0 +1,754 @@
+---
+title: "Radom Forest model training, tuning and validation for activity classification"
+author: 
+  affiliation: Philipps-University of Marburg, Environmental informatics
+  corresponding author email: <jannisgot@gmail.com>
+  name: Jannis Gottwald
+date: "`r format(Sys.time(), '%d %m, %y')`"
+bibliography: "references.bib"
+output:
+  html_document:
+    highlight: tango
+    theme: united
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+  word_document:
+    toc: yes
+    toc_depth: '4'
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = T, message = F, warning = F, tidy = T,
+                      fig.width=12, fig.height=12)
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy() # Allow copy code options in html file
+getwd()
+```
+
+
+
+## Introduction
+
+Small movements of tagged animals result in discernible variations in the strength of the received signal (@Cochran1965-zk; @Kjos1970-nw) that reflect changes in the angle and distance between the transmitter and receiver. @Kays2011-kb proposed a method for automatically classifying active and passive behaviour based on a threshold difference in the signal strength of successive VHF signals recorded by a customised automatic radio-tracking system. However,  machine learning (ML) algorithms are optimised for the recognition of complex patterns in a dataset and are typically robust against factors that influence signal propagation, such as changes in temperature and humidity, physical contact with conspecifics and/or multipath signal propagation (@Alade2013-oi). Accordingly, a ML model trained with a dataset encompassing the possible diversity of signal patterns related to active and passive behaviour can be expected to perform at least as well as a threshold-based approach. 
+In this work, we built on the methodology of Kays et al. (2011) by calibrating two random forest models (1 for data comming from only one receiver and one for data coming from at least two receivers), based on millions of data points representing the behaviours of multiple tagged individuals of two temperate bat species (Myotis bechsteinii, Nyctalus leisleri).
+
+The method was tested by applying it to independent data from bats, humans, and a bird species and then comparing the results with those obtained using the threshold-based approach of Kays et al. (2011) applying a threshold value of 2.5 dBw signalstrength difference suggested by [Schofield et al 2018](https://doi.org/10.1642/AUK-17-229.1). 
+
+In order to make our work comprehensible, code and data are made available to all interested parties. Data for model training can be found[here](https://data.uni-marburg.de/handle/dataumr/149). Data for evaluation is stored [here](https://data.uni-marburg.de/handle/dataumr/151).
+
+This resource contains the following steps:
+
++ Training two models in conjunction with forward feature selection
++ Parameter tuning
++ Validation using three independent data sets
++ Comparison to a threshold based approach as proposed in Kays et al. 2011
+
+
+But before we get started: 
+
+
+
+### Why Random Forest?
+
+Although deep learning methods have been successfully applied to several ecological problems where large amounts of data are available (@Christin2019-xq), we use a random forest model due to the following reasons: 
+
++ (a) developing a (supervised) deep learning method requires considerable effort for selecting an appropriate neural network architecture, choosing an appropriate framework to implement the neural network and training, validating, testing, and refining the neural network (@Christin2019-xq) 
++ (b) essentially, we have to solve a binary classification task based on tabular data; in this setting, tree ensemble methods such as random forests seem to have clear advantages - they are less computationally intensive, easy to implement, robust, and at least as performant as deep learning (@Shwartz-Ziv2022-eu) 
++ (c) in a large study comparing 179 classifiers applied to the 121 classification data sets of the UCI repository, random forests are the best classifiers in over 90% of the cases (@Fernandez-Delgado2014-te).
+
+## Model training and tuning
+
+For model training and tuning we use the `caret` R-Package (Kuhn 2008). For the forward feature selection we use the `CAST` R-Package developed by Meyer et al. 2018.
+
+
+Additional packages needed are:  `randomForest`,`ranger`, `doParallel` , `MLeval`, `data.table`, `dplyr`, `plyr`
+
+Load packages
+```{r message=FALSE}
+library(caret); library(randomForest);library(ranger); library(doParallel);library(MLeval);library(CAST);library(data.table);library(dplyr);library(plyr)
+
+```
+
+
+### Data for model training
+Only one antenna is necessary to classify VHF signals into active vs. passive states (Kays et al. 2011). However, agreement between receivers of the same station provides additional information and can improve the reliability of the classification.
+Our groundtruth dataset was balanced by randomly down-sampling the activity class with the most data to the amount of data contained by the class with the least data. These balanced datasets were then split into 50% training data and 50% test data for data originating from one receiver. The same procedure was used for data derived from the signals of two receivers, resulting in two training and two test datasets. From a total of 3,243,753 VHF signals, 124,898 signals were assigned to train the two-receiver model and 294,440 signals to train the one-receiver model (Table 1). 
+
+### Feature selection
+Since not all variables are equally important to the model and some may even be misleading,we performed a forward feature selection on 50% of the training data. The forward feature selection algorithm implemented in the R package CAST (@Meyer2018-rj) selects the best pair of all possible two variable combinations by evaluating the performance of a k-fold cross-validation (CV). The algorithm iteratively increases the number of predictors until no improvement of the performance is achieved by adding further variables.
+
+
+#### 1 Receiver model
+```{r}
+
+# get data and check class distribution
+data_1<-readRDS("model_tuning/data/batsTrain_1_receiver.rds")
+
+table(data_1$Class)
+
+```
+
+
+```{r eval = FALSE}
+
+#forward feature selection
+
+predictors<-names(data_1[, -ncol(data_1)])
+
+
+cl<-makeCluster(10)
+
+registerDoParallel(cl)
+
+ctrl <- trainControl(## 10-fold CV
+  method = "cv",
+  number = 10)
+
+
+#run ffs model with 10-fold CV
+set.seed(10)
+
+ffsmodel <- ffs(predictors=data_1[,predictors],response = data_1$Class,method="rf",
+                metric="Kappa",
+                tuneLength = 1,
+                trControl=ctrl,
+                verbose = TRUE)
+
+ffsmodel$selectedvars
+
+
+saveRDS(ffsmodel, "model_tunig/models/m_r1.rds")
+
+stopCluster(cl)
+
+```
+
+
+
+#### Results feature selection 
+
+Red dots display two-variables combinations, dots with the colors from yellow to pink stand for models to each of which another variable has been added. Dots with a black border mark the optimal variable combination in the respective iteration.
+
+````{r message=FALSE}
+
+m1<-readRDS("model_tuning/models/m_r1.rds")
+
+print(m1)
+
+print(plot_ffs(m1))
+
+````
+
+#### Variable importance 1 receiver model
+
+``` {r messages=FALSE}
+plot(varImp(m1))
+```
+
+#### 2 Receivers model
+
+```{r}
+
+#get data and check class distribution
+data_2<-readRDS("model_tuning/data/batsTrain_2_receivers.rds")
+
+table(data_2$Class)
+```
+
+```{r eval = FALSE}
+
+predictors<-names(data_2[, -ncol(data_2)])
+
+
+cl<-makeCluster(10)
+
+registerDoParallel(cl)
+
+ctrl <- trainControl(## 10-fold CV
+  method = "cv",
+  number = 10)
+
+#run ffs model
+set.seed(10)
+
+ffsmodel <- ffs(predictors=data_2[,predictors],response = data_2$Class,method="rf",
+                metric="Kappa",
+                tuneLength = 1,
+                trControl=ctrl,
+                verbose = TRUE)
+
+ffsmodel$selectedvars
+
+saveRDS(ffsmodel, "model_tuning/models/m_r2.rds")
+
+stopCluster(cl)
+
+```
+
+#### Results feature selection
+
+Red dots display two-variables combinations, dots with the colors from yellow to pink stand for models to each of which another variable has been added. Dots with a black border mark the optimal variable combination in the respective iteration.
+
+``` {r messages=FALSE}
+
+m2<-readRDS("model_tuning/models/m_r2.rds")
+print(m2)
+print(plot_ffs(m2))
+
+```
+
+#### Variable importance 2 receivers model
+
+``` {r messages=FALSE}
+plot(varImp(m2))
+```
+
+### Model tuning
+
+Random forest is an algorithm which is far less tunable than other algorithms such as support vector machines (@Probst2019-hl) and is known to provide good results in the default settings of existing software packages (Fernández-Delgado et al.,
+2014). 
+Even though the performance gain is still low, tuning the parameter mtry provides the biggest average improvement of the AUC (0.006) (Probst et al.2018). Mtry is defined as the number of randomly drawn candidate variables out of which each split is selected when growing a tree. Here we reduce the existing predictor variables to those selected by the forward feature selection and iteratively increase the number of randomly drawn candidate variables from 1 to the total number of selcted variables. Other parameters, such as the number of trees are held constant according to default settings in the packages used.
+
+#### Tuning mtry on the 1 receiver model
+
+```{r eval = FALSE}
+
+#reduce to ffs variables
+predictors<-names(data_1[, c(m1$selectedvars, "Class")])
+batsTune<-data_1[, predictors]
+
+#tune number of variable evaluated per tree- number of trees is 500
+ctrl <- trainControl(## 10-fold CV
+  method = "cv",
+  number = 10,
+  verboseIter = TRUE)
+  )
+
+tunegrid <- expand.grid(
+  mtry = 1:(length(predictors)-1),                                  # mtry specified here
+  splitrule = "gini"
+  ,min.node.size = 10
+)
+
+tuned_model <- train(Class~.,
+                    data=batsTune,
+                    method='rf',
+                    metric='Kappa',
+                    tuneGrid=tunegrid,
+                    ntree=1000,
+                    trControl=ctrl)
+
+saveRDS(tuned_model,"model_tunig/models/m_r1_tuned.rds")
+````
+
+
+
+#### Results model tuning 1 receiver
+
+
+````{r messages=FALSE}
+
+m1_tuned<-readRDS("model_tuning/models/m_r1_tuned.rds")
+
+print(m1_tuned)
+
+````
+
+
+
+#### Tuning mtry on the 2 receivers model
+
+
+```{r eval = FALSE}
+
+
+#reduce to ffs variables
+predictors<-names(data_2[, c(m2$selectedvars, "Class")])
+batsTune<-data_2[, predictors]
+
+#tune number of variable evaluated per tree- number of trees is 1000
+ctrl <- trainControl(## 10-fold CV
+  method = "cv",
+  number = 10,
+  verboseIter = TRUE
+)
+
+
+tunegrid <- expand.grid(
+  mtry = 1:(length(predictors)-1),                                  # mtry specified here
+  splitrule = "gini"
+  ,min.node.size = 10
+)
+tuned_model_2 <- train(Class~.,
+                     data=batsTune,
+                     method='rf',
+                     metric='Kappa',
+                     tuneGrid=tunegrid,
+                     ntree=1000,
+                     trControl=ctrl)
+print(tuned_model_2)
+
+
+saveRDS(tuned_model_2,"model_tuning/models/m_r2_tuned.rds")
+
+
+```
+
+#### Results model tuning 2 receivers
+
+``` {r messages=FALSE}
+m2_tuned<-readRDS("model_tuning/models/m_r2_tuned.rds")
+print(m2_tuned)
+```
+
+
+#### Results and discussion model training and tuning
+
+Both models ( based on data from 1 receiver and 2 receivers) had very high performance metrics (Kappa, Accuracy) with slightly better results for the 2 receivers model.Tuning the mtry parameter did not increase the performance which indicates that for our use case default settings are a good choice. 
+
+## Model evaluation
+
+For the Validation of the model performance and applicability to species with different movement behaviour (speed etc. than bats) we generated three different data sets. 
++ 1. We put 50% of our bat data aside
++ 2. We collected ground truth data of a tagged medium spotted woodpecker
++ 3. We simulated different movement intensities by humans carrying transmitters through the forest
+
+In this section we will test how well the models perform in terms of different performance metrics such as F-Score, Accuracy, ROC-AUC
+
+### Bats
+
+We first take a look at te 50% test data that has been put aside for evaluation. Here we actually perform the prediction using the two trained models. For the woodpecker and human walk data set we will use already predicted data that has been processed by script `validation_woodpecker` and `validation_human_activity`.
+
+#### Test data collected by one Receiver
+
+``` {r}
+
+# Testdata 1 receiver
+Test_1<-readRDS("validation/bats/data/batsTest_1_receiver.rds")
+print(table(Test_1$Class))
+
+# Default names as expected in Caret
+Test_1$obs<-factor(Test_1$Class)
+
+#get binary prediction
+pred1<-predict(m1, Test_1)
+Test_1$pred<-factor(pred1)
+
+#probabilities
+prob<-predict(m1, Test_1, type="prob")
+Test_1<-cbind(Test_1, prob)
+
+````
+
+````{r eval=FALSE}
+
+#calculate roc-auc 
+
+roc1 <- MLeval::evalm(data.frame(prob, Test_1$obs))
+saveRDS(roc1, "validation/bats/results/roc_1receiver.rds")
+
+
+````
+
+
+#### Performance metrics for 1-receiver test data of bats
+
+````{r}
+#create confusion matrix
+cm_r1<- confusionMatrix(factor(Test_1$pred), factor(Test_1$Class))
+print(cm_r1)
+print(cm_r1$byClass)
+
+````
+
+
+
+#### ROC-AUC for 1-receiver test data of bats
+
+````{r}
+#
+
+#twoClassSummary(Test_1, lev = levels(Test_1$obs))
+  roc1 <- readRDS("validation/bats/results/roc_1receiver.rds")
+print(roc1$roc)
+````
+
+
+
+#### Bats: Test data collected by two receivers
+
+
+``` {r messages=FALSE}
+#two receivers
+Test_2<-readRDS("validation/bats/data/batsTest_2_receivers.rds")
+
+table(Test_2$Class)
+
+Test_2$obs<-Test_2$Class
+#get binary prediction
+pred2<-predict(m2, Test_2)
+Test_2$pred<-pred2
+#probabilities
+prob2<-predict(m2, Test_2, type="prob")
+Test_2<-cbind(Test_2, prob2)
+
+
+````
+
+````{r eval=FALSE}
+#calculate roc-auc
+roc2 <- MLeval::evalm(data.frame(prob2, Test_2$obs))
+
+saveRDS(roc2, "validation/bats/results/roc_2receivers.rds")
+
+
+````
+
+#### Performance metrics for 2-receiver test data of bats
+
+````{r}
+cm_r2<- confusionMatrix(factor(Test_2$pred), factor(Test_2$obs))
+print(cm_r2)
+print(cm_r2$byClass)
+
+````
+
+
+
+#### ROC-AUC for 2-receiver test data of bats
+
+```` {r, eval=FALSE}
+#
+#twoClassSummary(data_2, lev = levels(data_2$obs))
+roc2 <- readRDS("validation/bats/results/roc_2receivers.rds")
+
+print(roc2$roc)
+
+````
+
+### Woodpecker
+
+``` {r messages=FALSE}
+#two receivers
+wp<-readRDS("validation/woodpecker/data/woodpecker_groundtruth.rds")
+
+wp$obs<-as.factor(wp$observed)
+wp$pred<-as.factor(wp$prediction)
+
+```
+
+
+#### Performance metrics woodpecker
+
+```` {r messages=FALSE}
+#create confusion matrix
+cm_wp<- confusionMatrix(wp$pred, wp$obs)
+print(cm_wp)
+print(cm_wp$byClass)
+
+
+````
+
+#### ROC-AUC Woodpecker
+
+```` {r messages=FALSE}
+print(twoClassSummary(wp, lev = levels(wp$obs)))
+roc_wp <- MLeval::evalm(data.frame(wp[, c("active", "passive")], wp$obs), plots=c("r"))
+
+#print(roc_wp$roc)
+````
+
+
+### Human activity
+
+``` {r messages=FALSE}
+#two receivers
+hm<-readRDS("validation/human/data/human_walk_groundtruth.rds)
+hm$obs<-factor(hm$observation)
+hm$pred<-factor(hm$prediction)
+
+```
+
+
+#### Performance metrics human activity
+
+````{r messages=FALSE}
+#create confusion matrix
+cm_hm<- confusionMatrix(factor(hm$pred), factor(hm$obs))
+print(cm_hm)
+print(cm_hm$byClass)
+
+````
+
+#### ROC-AUC human activity
+ 
+````{r messages=FALSE}
+twoClassSummary(hm, lev = levels(hm$obs))
+roc_hm <- MLeval::evalm(data.frame(hm[, c("active", "passive")], hm$obs),plots=c("r"))
+#print(roc_hm$roc)
+````
+
+### Results random-forest model validation
+
+Regardless of whether the models were tested on independent test data from bats or on data from other species (human, woodpecker), the performance metrics were always close to their maxima.
+
+
+## Comparison to a threshold based approach
+
+The results of the ML-based approach were compared with those of a threshold-based approach (Kays et al. 2011)by calculating the difference in the signal strength between successive signals for all three test datasets (bats, bird, humans). We applied a threshold of 2.5 dB which was deemed appropriate to optimally separate active and passive behaviours in previous [studies](https://doi.org/10.1642/AUK-17-229.1) . In addition, the optimize-function of the R-package stats (R Core Team, 2021) was used to identify the value of the signal strength difference that separated the training dataset into active and passive with the highest accuracy. This value was also applied to all three test datasets.
+
+### Bats
+
+#### Threshold optimisation
+
+To find the threshold value that optimizes the accuracy (data is balanced) when separating the data into active and passive, we first calculated the signal strength difference of consecutive signals in the complete bats data set, than separated 50 % balanced test and train data and finally used the optimize function from the R base package to determine the best threshold.
+
+````{r messages=FALSE}
+#get all bat data
+trn<-fread("validation/bats/data/train_2020_2021.csv")
+
+#calculate signal strength difference per station
+dtrn<-plyr::ldply(unique(trn$station), function(x){
+  
+  tmp<-trn[trn$station==x,]
+  tmp<-tmp[order(tmp$timestamp),]
+  tmp<-tmp%>%group_by(ID)%>%
+    mutate(Diff = abs(max_signal - lag(max_signal)))
+  return(tmp)
+  })
+
+##data clean up
+dtrn<-dtrn[!is.na(dtrn$Diff),]
+dtrn<-dtrn[!(dtrn$behaviour=="active" & dtrn$Diff==0),]
+
+##factorize
+dtrn$behaviour<-as.factor(dtrn$behaviour)
+table(dtrn$behaviour)
+
+#balance data
+set.seed(10)
+
+tdown<-downSample(x = dtrn,
+                  y = dtrn$behaviour)
+
+#create 50% train and test
+
+trainIndex <-createDataPartition(tdown$Class, p = .5, 
+                                 list = FALSE, 
+                                 times = 1)
+
+dtrn <- tdown[ trainIndex,]
+dtst  <- tdown[-trainIndex,]
+
+#optimize seperation value based on accuracy (remeber data is balanced)
+
+value<-dtrn$Diff
+group<-dtrn$behaviour
+
+accuracy = Vectorize(function(th) mean(c("passive", "active")[(value > th) + 1] == group))
+ac<-optimize(accuracy, c(min(value, na.rm=TRUE), max(value, na.rm=TRUE)), maximum=TRUE)
+
+ac$maximum
+````
+
+
+#### Performance metrics based on optimized threshold
+
+````{r messages=FALSE}
+
+#classify data by optimized value
+dtst$pred<-NA
+dtst$pred[dtst$Diff>ac$maximum]<-"active"
+dtst$pred[dtst$Diff<=ac$maximum]<-"passive"
+
+#calc confusion matrix
+dtst$pred<-factor(dtst$pred)
+cm<-confusionMatrix(factor(dtst$Class), factor(dtst$pred))
+
+print(cm)
+print(cm$byClass)
+````
+
+
+#### Performance metrics based on 2.5 dB threshold from the literature
+
+````{r messages=FALSE}
+#2.5 dB value from the literature
+dtst$pred<-NA
+dtst$pred[dtst$Diff>2.5]<-"active"
+dtst$pred[dtst$Diff<=2.5]<-"passive"
+
+dtst$pred<-factor(dtst$pred)
+cm<-confusionMatrix(dtst$Class, dtst$pred)
+print(cm)
+print(cm$byClass)
+````
+
+### Woodpecker  
+
+Since activity observations are not continuous but signal recording on the tRackIT-Stations is, we first have to calculate the signal strength difference on the raw data and than match it to the ground truth observations
+
+````{r messages=FALSE}
+
+#list raw signals
+wp<-list.files("validation/woodpecker/data/raw/", full.names = TRUE)
+
+
+#calculate signal strength difference
+wp_tst<-plyr::ldply(wp, function(x){
+  
+  tmp<-fread(x)
+  tmp<-tmp[order(tmp$timestamp),]
+  tmp<-tmp%>%mutate(Diff = abs(max_signal - lag(max_signal)))
+  return(tmp)
+})
+
+wp_tst$timestamp<-lubridate::with_tz(wp_tst$timestamp, "CET")
+
+#get observations and merge by timestamp
+
+wp_gtruth<-readRDS("validation/woodpecker/data/woodpecker_groundtruth.rds")
+
+wp_tst<-merge(wp_gtruth, wp_tst, all.x = TRUE)
+
+````
+
+
+#### Performance metrics based on optimized threshold
+
+
+````{r messages=FALSE}
+
+wp_tst$pred<-NA
+wp_tst$pred[wp_tst$Diff>ac$maximum]<-"active"
+wp_tst$pred[wp_tst$Diff<=ac$maximum]<-"passive"
+
+wp_tst$pred<-factor(wp_tst$pred)
+wp_tst$observed<-factor(wp_tst$observed)
+
+cm<-confusionMatrix(factor(wp_tst$observed), factor(wp_tst$pred))
+
+print(cm)
+print(cm$byClass)
+
+````
+
+
+
+#### Performance metrics based on 2.5 dB threshold from the literature
+
+````{r messages=FALSE}
+
+#evaluate with 2.5 dB value from the literature
+wp_tst$pred<-NA
+wp_tst$pred[wp_tst$Diff>2.5]<-"active"
+wp_tst$pred[wp_tst$Diff<=2.5]<-"passive"
+
+wp_tst$pred<-factor(wp_tst$pred)
+cm<-confusionMatrix(wp_tst$observed, wp_tst$pred)
+print(cm)
+print(cm$byClass)
+
+````
+
+### Humans
+
+Human activity observations are also not continuous so we have to calc signal strength diff for each individual on the raw data
+
+````{r messages=FALSE}
+
+hm_dirs<-list.dirs("validation/human/data/", full.names = TRUE)
+hm_dirs<-hm_dirs[grep("raw", hm_dirs)]
+hm_tst<-plyr::ldply(hm_dirs, function(d){
+  
+  fls<-list.files(d, full.names = TRUE)
+  
+  tmp_dat<-plyr::ldply(fls, function(x){
+  
+  tmp<-fread(x)
+  tmp<-tmp[order(tmp$timestamp),]
+  tmp<-tmp%>%mutate(Diff = abs(max_signal - lag(max_signal)))
+  return(tmp)
+})
+  
+  return(tmp_dat)})
+
+#get obesrvations and merge
+hm_gtruth<-readRDS("validation/human/data/human_walk_groundtruth.rds")
+hm_tst<-merge(hm_gtruth, hm_tst, all.x = TRUE)
+hm_tst<-hm_tst[!duplicated(hm_tst$timestamp),]
+
+````
+
+
+
+#### Performance metrics based on optimized threshold
+
+````{r messages=FALSE}
+
+#evaluate based on optimized threshold
+hm_tst$pred<-NA
+hm_tst$pred[hm_tst$Diff>ac$maximum]<-"active"
+hm_tst$pred[hm_tst$Diff<=ac$maximum]<-"passive"
+
+hm_tst$pred<-factor(hm_tst$pred)
+hm_tst$observed<-factor(hm_tst$observation)
+
+cm<-confusionMatrix(hm_tst$observed, hm_tst$pred)
+
+print(cm)
+print(cm$byClass)
+#print(cm$table)
+
+
+````
+
+
+
+#### Performance metrics based on 4 dB threshold from the literature
+
+
+````{r messages =FALSE}
+#evaluate based on 2.5 dB value from the literature 
+
+hm_tst$pred<-NA
+hm_tst$pred[hm_tst$Diff>2.5]<-"active"
+hm_tst$pred[hm_tst$Diff<=2.5]<-"passive"
+
+hm_tst$pred<-factor(hm_tst$pred)
+cm<-confusionMatrix(hm_tst$observed, hm_tst$pred)
+
+print(cm)
+print(cm$byClass)
+print(cm$table)
+
+````
+## Comparison of the threshold based approach and the random-forest Model
+
+When calibrating the threshold based approach on an adequate train data set,ii is generally able to separate active and passive behavior but performance metrics (F1=0.79, 0.78, 0.88; bats, woodpecker, human) are between 10 and 20 points worth and more variable than our random forest model (F1= 0.97, 0.97, 0.98; bats,woodpecker,human). With F-scores between 0.46 and 0.58 the threshold value proposed in the literature performed significantly worth.
+
+Since only the test data set of the bats is balanced but the woodpecker data is slightly imbalanced and the human activity data set is highly imbalanced lets also take a look at a metric that takes the data distribution into account:
+
+Cohen’s kappa is defined as:
+
+`K=(p_0-p_e)/(1-p_e)`
+
+where p_0 is the overall accuracy of the model and p_e is the measure of the agreement between the model predictions and the actual class values as if happening by chance.
+
+Cohen’s kappa is always less than or equal to 1. Values of 0 or less, indicate that the classifier is not better than chance.  @Landis1977-re provide a way to characterize values. According to their scheme a value < 0 is indicating no agreement , 0–0.20  slight agrement, 0.21–0.40 fair agreement, 0.41–0.60 moderate agreement, 0.61–0.80 substantial agreement , and 0.81–1 as almost perfect agreement.
+
+Kappa values based on the 2.5 dB separation value from the literature ranged between 0.3 (humans) and 0.38 (woodpecker), i.e. a fair agreement. For the optimized threshold Kappa values were significantly better in all cases (0.46, 0.58, 0.53; bats, woodpecker, humans); i.e. moderate agreement. However, even the best Kappa value for the threshold based approach only showed a moderate agreement while all Kappa values based on the random-forest model showed an almost perfect agreement ( 0.94, 0.94, 0.90 ; bats, woodpecker, humans ).
+
+
+# REFERENCES
+
+

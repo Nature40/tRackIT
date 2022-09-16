@@ -1,0 +1,349 @@
+---
+title: "Processing radio-tracking data with the tRackIT R-Package"
+author: "Jannis Gottwald"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The tRackIT R-Package provides functionalities for the processing of data recorded in local automatic radio-tracking studies. It is specifically tailored to data recorded with one of the sensors from the [tRackIT ecosystem](https://dx.doi.org/10.18420/informatik2021-035) (tRackIT-Stations, BatRack), but can also be used for other systems. 
+The functionalities provided in the package cover project and individual management, raw signal data processing and the generation of high-level information such as the [calculation of locations]( https://doi.org/10.1111/2041-210X.13294) and the [classification of behavioral states](https://doi.org/10.1101/2022.03.22.485147)  based on pattern in the recorded vhf-signals. It provides a default data structure to guarantee easy exchangeability of data and analysis scripts between scientists. 
+
+Note that filtering of raw data relies on tags, that can be distinguished by frequency and not by codes. If you want to work with coded tags, the data must be filtered beforehand. This may change in future versions of the package.
+
+## Getting startet
+
+The package uses functionalities from the [telemetr](https://github.com/barryrowlingson/telemetr) R-Package developed by Barry Rowlingson. It provides all methods for the localization of a transmitter described in [this article](https://doi.org/10.2307/1268030) using fortran in the background. To make use of the dependencies however, some adjustments to the package had to be conducted, which is why the version used in the tRackIT R-package is hostet under the Nature40 github account. Before the tRackIT package can be installed, please install the telemtr package as follows:
+
+```{r eval=FALSE}
+library(remotes)
+
+Sys.setenv("R_REMOTES_NO_ERRORS_FROM_WARNINGS" = "true")
+
+remotes::install_github("Nature40/telemetr")
+```
+
+
+We also make use of very fast c++ based [rolling windows](https://github.com/andrewuhl/RollingWindow) which are not hostet on cran, yet. Please install the package as follows:
+
+```{r eval=FALSE}
+devtools::install_github("andrewuhl/RollingWindow")
+```
+
+
+Now you can install the tRackIT R-package
+
+```{r eval=FALSE}
+devtools::install_github("Nature40/tRackIT")
+
+```
+
+```{r}
+
+library(tRackIT)
+
+```
+
+## Test-data and models
+
+To check out the functionalities of the package using the package vignette, we recommend to download the [test data](https://doi.org/10.17192/fdr/104) and [trained models]( https://doi.org/10.17192/fdr/79) for activity classification. Models need to be unzipped and stored in the extdata folder of the installed tRackIT-package. Store the test data in your working directory and unzip them.
+
+## Set up a project
+
+First set your working directory to `your/path/tRackIT_test_data`
+
+```{r, eval=FALSE}
+setwd("your/path/tRackIT_test_data")
+```
+
+To initialize a project with the tRackIT R-Package, some meta information, such as meta data about the spatial positions of your tracking stations, pointing directions of your antennas and information about the tagged individuals has to be provided. You can read the provided meta data for tracking stations from `data/reference_data/`. 
+
+```{r}
+#get data
+stations<-data.table::fread("data/reference_data/stations_mof_2021.csv")
+
+#check data structure 
+
+```
+
+
+Since we are only processing one individual, we create the meta data manually.
+
+```{r}
+#create data.frame
+tag_df<-data.frame(id="woodpecker", freq=150050, start="2021-06-10", end="2021-06-14")
+```
+
+Now lets initialize a tRackIT-project using the `tRackIT::initProject()`function. For the individuals (tag_df) we have to specify the column names for the ID (id_col), the start of the tagging period (start), the end of the tagging period (end) and the frequency of the transmitter in khz (freq). For the stations metadata we have to specify the column conatining the name of the station (s_col), the x coordinates (x_col), the y coordinates (y_col), the column carrying the identifier for the receiving device (r_col) and the column indicating the orientation of the antennas (o_col). Additionally the epsg code of the station coordinates as well as the time zone of the study are mandatory.
+
+```{r}
+projroot<-paste0(getwd(), "/")
+
+#init Project
+test_project<-initProject(projroot = projroot,
+                          logger_data_raw=".",
+                          tags=tag_df,
+                          id_col="id",
+                          start_col="start", 
+                          end_col="end",
+                          freq_col="freq",
+                          stations=stations,
+                          s_col="station",
+                          x_col="X",
+                          y_col="Y",
+                          r_col="receiver",
+                          o_col="orientation",
+                          epsg=4326,
+                          tz="CET")
+
+
+```
+
+Now we have created a tRackIT-project. Check out the root folder of the project to get familiar with the data structure. There is also a `_projectFile.rds` that stores all the information of the project. You can access this file using the `getProject()` function. This makes the exchange of project much easier.
+
+
+```{r eval=FALSE}
+#get the project
+test_project<-getProject(projroot = projroot)
+
+#filepath list
+test_project$path
+
+#stations
+test_project$stations
+
+#tags
+test_project$tags
+
+#epsg and tz
+test_project$epsg
+test_project$tz
+
+```
+
+
+Now we initialize an individual. You can provide further information such as sex, reproductive state, age and weight to the meta data of the individual. The duration arguments (in milliseconds) specify the expected length of signals and are necessary to seperate signals from noise.
+
+
+```{r}
+woodpecker<-initAnimal(projList = test_project,projroot= projroot,saveAnml = TRUE, animalID = "woodpecker", species = "Dendrocoptes medius", sex = "m", age = "adult", weight = 36, rep.state = "breeding", freq = test_project$tags$frequency[1], start = test_project$tags$start[1], end = test_project$tags$end[1], duration_min = 0.012, duration_max = 0.4 )
+
+```
+
+
+Again, a .rds file with all the information is stored and can be acessed via the `getAnimal()` function.
+
+
+```{r eval=FALSE}
+#get id
+woodpecker<-getAnimal(projroot = projroot, animalID = "woodpecker")
+
+#meta
+woodpecker$meta
+
+#filepath list
+
+woodpecker$path
+
+
+```
+
+## Process data
+
+As starting point the tRackIT-package expects one .csv file per tracking-station with raw and unfiltered recordings. The files you want to process should all be in one folder. The natural folder for that would be:
+
+```{r}
+
+test_project$path$csv
+
+```
+
+However, you can specify any other folder. In a first step, we want to filter these files by Frequency, signal duration and runtime of the transmitter. Make shure that there is one file per station and that they have the following columns: timestamp= time of received signal-expected format: “%Y-%m-%d %H:%M:%S (e.g. 1970-01-29 15:30:22:11),  duration=signal length of the recorded signal, frequency= frequency in kHz (e.g. 150150.2),  max= the max signal strength in dBW of the recorded signal (peak) , receiver= name of the receiver device (usually 0,1,2,3 for a 4 Antenna station ), station= name of the station as character string
+
+```{r eval=FALSE}
+
+filter_tRackIT(animal = woodpecker, freq_er=2, path_to_data = test_project$path$csv, d_min = woodpecker$meta$duration_min, d_max = woodpecker$meta$duration_max, start = woodpecker$meta$start, end = woodpecker$meta$end, freq = woodpecker$meta$freq)
+```
+
+Filtered files are stored here:
+
+```{r}
+woodpecker$path$filtered
+```
+
+The filtered data can now be used for activity classification and position tracking
+
+### Activity classification
+
+Here, the processing steps for classification of VHF signals into fundamental behaviours with the help of specially trained machine-learning models (Gottwald et al. 2022) will be presented. The dataset used in this tutorial was created to test the transferability of our model trained on bat movements to observed movements of a middle spotted woodpecker. See chapter validation and the corresponding publication for details. 
+
+#### variable calculation
+
+The trained models ecpect certain variables to be provided. We can calculate them with the `activity_vars_tRackIT()` function. To facilitae the use of the functionalities with other systems the names of the columns containing the tiemstamp (tcol), the signal strength (scol) and the receiving decvice (dcol) can be provided. 
+
+
+```{r eval=FALSE}
+#calculate variables for activity classification
+activity_vars_tRackIT(animal = woodpecker, t_col = "timestamp", s_col = "max", r_col = "receiver", tz = "UTC")
+```
+
+
+#### activity classification
+
+Once the variables are calculated, you can classify them using our trained models. Make shure the [models]( https://doi.org/10.17192/fdr/79) are stored in the extdata folder of the installed tRackIT-Package.
+
+```{r}
+#use trained models for activity classification
+data<-activity_predict_tRackIT(animal = woodpecker, get_data = TRUE)
+```
+
+Lets have a look
+
+```{r out.width="100%"}
+library(ggplot2)
+library(lubridate)
+#cut data to BirdRack obeservation period
+data<-data[data$timestamp>="2021-06-10 06:00;00" & 
+            data$timestamp<="2021-06-14 04:00:00",]
+#convert to local timezone
+data$timestamp<-lubridate::with_tz(data$timestamp, tzone=test_project$tz)
+
+#prepare night and day shading in plot
+data$date<-as.Date(data$timestamp)
+data$hour<-hour(data$timestamp)
+data$start<-as.POSIXct(paste0(data$date, " 05:15:00"), tz="CET")
+data$end<-as.POSIXct(paste0(data$date, " 21:30:00"), tz="CET")
+data$hour_shade =ifelse(data$hour >= 21 | data$hour <= 5,  "day", "night")
+data$hour_shade[data$date=="2021-06-14"]<-"night"
+
+##plot
+ggplot()+geom_rect(data=data, (aes(xmin=start, xmax=end,ymin=min(max), ymax=max(max), fill=factor(hour_shade))))+scale_fill_manual(values=c(  "grey90", "white"), guide="none")+ geom_point(data, mapping=aes(x=timestamp, y=max, color=prediction))+ggthemes::scale_color_wsj()+ggtitle("Woodpecker activity")+ ylab("signal strength in dBW")
+
+
+
+```
+
+We are looking at 648777 data points.
+You can aggregate the data to a coarser time using the `activity_aggregate_tRackIT()` function. The function will select the most frequent value per time slot. Here we will aggregate the data to 1 minute bins. 
+
+```{r out.width="100%"}
+
+data<-activity_aggregate_tRackIT(animal = woodpecker, avalue = 1, tzone = "UTC", get_data = TRUE)
+
+
+
+data<-data[data$timestamp>="2021-06-10 06:00;00" & 
+            data$timestamp<="2021-06-14 04:00:00",]
+#convert to local timezone
+data$timestamp<-lubridate::with_tz(data$timestamp, tzone=test_project$tz)
+
+#prepare night and day shading in plot
+data$date<-as.Date(data$timestamp)
+data$hour<-hour(data$timestamp)
+data$start<-as.POSIXct(paste0(data$date, " 05:15:00"), tz="CET")
+data$end<-as.POSIXct(paste0(data$date, " 21:30:00"), tz="CET")
+data$hour_shade =ifelse(data$hour >= 21 | data$hour <= 5,  "day", "night")
+data$hour_shade[data$date=="2021-06-14"]<-"night"
+
+##plot
+ggplot()+geom_rect(data=data, (aes(xmin=start, xmax=end,ymin=min(max), ymax=max(max), fill=factor(hour_shade))))+scale_fill_manual(values=c(  "grey90", "white"), guide="none")+ geom_point(data, mapping=aes(x=timestamp, y=max, color=prediction))+ggthemes::scale_color_wsj()+ggtitle("Woodpecker activity")+ ylab("signal strength in dBW")
+
+
+
+
+```
+
+
+### Position tracking
+
+The principle of position calculation with the tRackIT-system is similar to its manual counterpart. First we calculate bearings per single stations using the algorithms provided in Gottwald et al. 2019 and then make use of different position calculation algorithms described [here](https://doi.org/10.2307/1268030). 
+
+
+Before we start, let´s reduce the data to a shorter time period- otherwise these processing steps would take to long.
+
+```{r eval=FALSE}
+#create a directory to store time filtered data
+
+dir.create("data/individuals/woodpecker/filtered_one_day/")
+
+filtered<-list.files(woodpecker$path$filtered, full.names = TRUE)
+
+lapply(filtered, function(x){
+  tmp<-data.table::fread(x)
+  tmp<-tmp[tmp$timestamp>="2021-06-10 08:00:00" & tmp$timestamp<="2021-06-10 18:00:00",]
+  
+  if(nrow(tmp)>0){
+  data.table::fwrite(tmp, paste0("data/individuals/woodpecker/filtered_one_day/", basename(x)))
+  
+}})
+
+```
+
+Lets start with bearing calculation. We first list all the filtered files and conduct time matching between the different receivers per station.
+
+```{r eval=FALSE}
+
+filtered<-list.files("data/individuals/woodpecker/filtered_one_day/", full.names = TRUE)
+
+lapply(filtered, function(x) time_match_logger_tRackIT(animal=woodpecker,path_to_data = x))
+```
+
+The time-matched data is now used to claculate the bearings according to the algorithm presented in Gottwald et al. 2019
+
+```{r eval=FALSE}
+matched<-list.files(woodpecker$path$logger_timematch, full.names = TRUE)
+
+lapply(matched, function(x) calc_bearings_tRackIT(path_to_data =x, dbLoss = 21, animal = woodpecker, projList = test_project ))
+
+```
+
+To detect outliers in the beaerings caused by missing signals or noise, we use a hampel filter, that replaces outliers by the median within a sliding window of 20 seconds 
+
+```{r eval=FALSE}
+bearings<-list.files(woodpecker$path$bearings, full.names = TRUE)
+
+lapply(bearings, function(x) hampel_time(path_to_data = x, col = "linear", k = 20, animal = woodpecker))
+
+````
+
+
+Now the positions can be calculated using different methods described in Lenth 1981. Here we accept all bearing within a time window (tw) of 5 seconds for the calculation of positions
+
+```{r eval=FALSE}
+tRackIT(animal = woodpecker, projList = test_project, tw = 5, be_col = "bearings_filtered", path_to_directory = woodpecker$path$bearings_filtered)
+
+````
+Since there is always noise in the data and sharp or flat intersections between bearings may cause positions with high spatial errors, we will apply some filtering to the data.
+
+```{r eval=FALSE}
+filter.triangs.tRackIT(animal = woodpecker, projList = test_project, rerange = 400, nbi = 0, speed = 50, tz = "UTC", filter_speed = TRUE, filter_distance = TRUE, filter_biang = TRUE, tw = 5)
+
+````
+Lets have a look
+
+<center>
+```{r message=F, warning=FALSE, fig.width=4}
+
+triangs<-data.table::fread(paste0(woodpecker$path$triangulations, "/triangulations_time_window_5_filtered.csv"))
+
+sp::coordinates(triangs) <- c("x", "y")
+        sp::proj4string(triangs) <- sp::CRS(paste0("+init=epsg:", test_project$epsg)) # WGS 84
+
+        
+mapview::mapview(triangs)@map        
+````
+<center>
+The woodpeckers nesting tree (red dot in Map) is located close to the narrow part of the location distribution
+
+![Map of the Marburg open Forest](H:/projects/repositories/MS_activity_classification/tRackIT_test_data/Map.jpg){width=30%}
+
