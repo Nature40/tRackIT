@@ -30,7 +30,7 @@ devtools::install_github("Nature40/tRackIT")
 
 ## Test data and models
 
-To check out the functionalities of the package using the package vignette, we recommend to download the [test data](https://data.uni-marburg.de/handle/dataumr/172) and [trained models]( https://doi.org/10.17192/fdr/79) for activity classification. Models need to be unzipped and stored in the extdata folder of the installed tRackIT-package. We also we provide the following [tutorials] (https://github.com/Nature40/tRackIT/tree/main/rmd) describing the workflow for [model tuning and evaluation](https://nature40.github.io/tRackIT_activity_classification_model_tuning_and_evaluation/) for activity classification. You can also check the [reproducible script](https://nature40.github.io/tRackIt_activity_ecological_case_study/) for the case study analysis shown in the paper.
+To check out the functionalities of the package using the package vignette, we recommend to download the [test data](https://data.uni-marburg.de/handle/dataumr/172) and [trained models]( https://doi.org/10.17192/fdr/79) for activity classification. Models need to be unzipped and stored in the extdata folder of the installed tRackIT-package. We also we provide the following [tutorials](https://github.com/Nature40/tRackIT/tree/main/rmd) describing the workflow for [model tuning and evaluation](https://nature40.github.io/tRackIT_activity_classification_model_tuning_and_evaluation/) for activity classification. You can also check the [reproducible script](https://nature40.github.io/tRackIt_activity_ecological_case_study/) for the case study analysis shown in the paper.
 
 
 
