@@ -32,7 +32,7 @@ triangulate <- function(method, path_to_data, animal, projList, collision = FALS
   data <- data[!is.na(data$s1), ]
   data <- data[!is.na(data$s2), ]
 
-  for (i in 1:nrow(data)) {
+  for (i in seq_len(data)) {
     # print(i)
     s1 <- antennas[as.character(antennas$station) == as.character(data$name_s1)[i], ]
     s2 <- antennas[as.character(antennas$station) == as.character(data$name_s2)[1], ]
@@ -71,7 +71,7 @@ tri_in <- function(method, data, projList) {
   data <- data[!is.na(data$s1), ]
   data <- data[!is.na(data$s2), ]
 
-  for (i in 1:nrow(data)) {
+  for (i in seq_len(data)) {
     # print(i)
     stations <- as.data.frame(stations)
     s1 <- stations[as.character(stations$station) == as.character(data$name_s1)[i], ]

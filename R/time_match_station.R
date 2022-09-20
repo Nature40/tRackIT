@@ -26,7 +26,7 @@ time_match_station <- function(data, method, tmstmp) {
   grid <- grid[indx, ] # selects only the non - duplicates according to that index
 
   df <- data.frame()
-  for (i in 1:nrow(grid)) {
+  for (i in seq_len(grid)) {
     tmp <- data[data$station == grid$Var1[i] | data$station == grid$Var2[i], ]
     dcst <- reshape2::dcast(tmp, timestamp ~ station, value.var = method, mean)
     dcst$name_s1 <- names(dcst)[2]

@@ -28,7 +28,7 @@ file.catalogue <- function(projList, station = ".", collection = ".") {
   all_time <- as.data.frame(stringr::str_split_fixed(all_sig$V1, "T", 2))
   all_time$time <- NA
 
-  for (j in 1:nrow(all_time))
+  for (j in seq_len(all_time))
   {
     x <- as.character(all_time$V2[j])
     x2 <- substring(as.character(all_time$V2[j]), seq(1, nchar(x) - 1, 2), seq(2, nchar(x), 2))

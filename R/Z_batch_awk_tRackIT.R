@@ -70,7 +70,7 @@ batch.awk.tRackIT <- function(animal, projList, freq_er_l, freq_er_r, min_dur, m
   date_list <- paste0("/", paste(date_list, collapse = "|"), "/")
 
 
-  awk_lst <- lapply(1:length(an_fls), function(x) {
+  awk_lst <- lapply(seq_len(an_fls), function(x) {
     station_file <- an_fls[x]
     print(station_file)
     # filename of the output

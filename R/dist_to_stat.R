@@ -23,7 +23,7 @@ dist_to_stat <- function(data, projList) {
   data$Stat_y <- NA
 
   stations <- projList$stations
-  for (i in 1:nrow(data)) {
+  for (i in seq_len(data)) {
     data$Stat_Y[i] <- stations$Y[stations$station == data$maxStation[i]]
     data$Stat_X[i] <- stations$X[stations$station == data$maxStation[i]]
   }
