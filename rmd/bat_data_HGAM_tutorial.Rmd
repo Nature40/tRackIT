@@ -1,0 +1,513 @@
+---
+title: "Timing of activity probability in Bechstein's and Leisler's bats: Data wrangling and checks procedure (Updated: )"
+author: 
+  
+  name: Raphaël Royauté, Jannis Gottwald
+  corresponding author email: <raphael.royaute@gmail.com>
+  affiliation: Senckenberg Biodiversity and Climate research Centre
+date: "`r format(Sys.time(), '%d %m, %y')`"
+output: 
+  html_document:
+    toc: true # table of content true
+    toc_depth: 4  # upto 4 depths of headings (specified by #, ##, ### and ####)
+    toc_float: true # Floating TOC
+    #number_sections: true  ## if you want number sections at each table header
+    theme: united  # themes
+    highlight: tango  # specifies the syntax highlighting style
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = T, message = F, warning = F, tidy = T,
+                      fig.width=12, fig.height=12)
+```
+
+
+## Introduction
+
+This tutorial shows how probability of activity curves can be extracted from the VHF signal data after classification of 1 min intervals into active or passive states. I'm using Hierarchical Generalized Additive Models following the [Pedersen et al. 2021](https://peerj.com/articles/6876/) article. The data needed for the execution of this tutorial can be downloaded [here](https://doi.org/10.17192/fdr/108)
+
+### Packages required
+
+Before you start, make sure that you have the following packages
+installed: `tidyverse`, `data.table`,`lubridate`,   `hms`, `mgcv`, `gratia`, `itsadug`, `mgcViz`, `ggthemes`, `viridis` 
+
+Additionally we will use functionalities from the `tRackIT` R package that is not hosted on cran yet. Please check the README in the [tRackIT](https://github.com/Nature40/tRackIT) GitHub repository for installation instructions
+
+Load the packages
+
+```{r}
+library(tidyverse); library(data.table)
+library(lubridate); library(hms)
+library(mgcv); library(gratia); #library(itsadug)
+library(mgcViz); library(ggthemes); library(viridis)
+library(tRackIT)
+```
+
+## 1. Data importation and wrangling
+
+The tRackIT-package [GitHub page](https://nature40.github.io/tRackIT/)  shows the complete workflow to get from raw signals to activity classifications with a 1 Minute resolution. We will skip that part here and start with the classified data of bats that have been tracket from 2018 to 2021 (`all_bats_aggregated`). There is one file per individual, that contains the timestamp, the activity class per timestamp and the ID. We will need some more info such as timing in relation to sunset and sunrise as well as species, sex etc. To do so we will use two functionalities of the tRackIT-package. The **time_of_day()** function claculates timedifference tu sunset and sunrise etc, the **add.ID.info()** function adds meta-info for the individual to the data. This section of the tutorial can only be executed if the [ecological_case_study_bat_activity](https://data.uni-marburg.de/handle/dataumr/152) directory has been downloaded. It has >270Gb and can´t be directly downloaded via the user interface. Check the README of the repository for instructions. However,  you can skip that part and continue with the next chunk of code using already processed [data](https://doi.org/10.17192/fdr/108).
+
+```{r,  eval=FALSE}
+
+#set coordinates for sunset/sunrise calculation
+
+Lat<-50.844868
+Lon<-8.663649
+
+#Loop through years 
+for(y in c(2018, 2019, 2020, 2021)){
+#print(y)
+#get projectfile per year
+pr<-getProject(projroot=paste0("bats_for_activity/",y, "/"))
+
+#remove ids with no data at all
+pr$tags<-pr$tags[pr$tags$ID!="Mbec180518_2",]
+pr$tags<-pr$tags[pr$tags$ID!="mbec150155_m",]
+
+#loop through individuals
+for(id in pr$tags$ID){
+  
+  #print(id)
+  
+  anml<-getAnimal(projList = pr, animalID = id)
+  #get activity classification aggregated to 1 Minute
+  activity_files<-list.files(anml$path$classification,pattern="agg", full.names = TRUE)
+  
+  if(length(activity_files)>0){
+  
+  activity_1Min<-data.table::fread(fls[1])
+  
+  #calculate daytime infos
+ activity_1Min<-time_of_day(data = activity_1Min, Lat=Lat, Lon = Lon, tcol = "timestamp", tz = "CET", activity_period = "nocturnal")
+  
+  #add id info
+activity_1Min<-add.ID.Info( data=activity_1Min, animal=anml)
+
+#number of tracking days
+activity_1Min$n_days<-as.numeric(abs(difftime(as.Date(activity_1Min$start_datetime), as.Date(activity_1Min$stop_datetime))))+1
+
+#binary activity classification
+activity_1Min$activity<-ifelse(activity_1Min$prediction=="active", 1,0)  
+
+#correction of typo
+activity_1Min$species[activity_1Min$species=="mbec"]<-"Mbec"
+  
+ data.table::fwrite(activity_1Min, paste0("all_bats_aggregated/",anml$meta$animalID, "_",as.character(y), "_aggregated_1_Minute.csv"))
+    
+      }
+}}
+
+
+#merge all data 
+all_aggregated_files<-list.files("all_bats_aggregated/", full.names = TRUE)
+
+all_bats<-plyr::ldply(fls, function(x){data.table::fread(x)})
+
+all_bats<-all_bats[all_bats$species=="Mbec" | all_bats$species=="Nlei",]
+
+
+
+#get info which ids should be excluded
+check_ids<-data.table::fread("bats_inspect_id.csv")
+excld<-check_ids[check_ids$exclude_individual=="Y",]
+
+#exclude ids from data
+all_bats<-all_bats[!(all_bats$ID %in% excld$ID),]
+
+#account for rep state transition
+
+df_rep<-read.csv("df_rep_state_transition.csv")
+for (id in unique(df_rep$ID)){
+  
+  if (df_rep$rep2[df_rep$ID==id]=="pregnant"){
+    
+    all_bats$rep.state[all_bats$ID==id & all_bats$year==df_rep$year[df_rep$ID==id] & all_bats$timestamp>=df_rep$start_rep1[df_rep$ID==id]]<-"lactating"}
+  
+  if (df_rep$rep2[df_rep$ID==id]=="post-lactating"){
+    
+  all_bats$rep.state[all_bats$ID==id & all_bats$year==df_rep$year[df_rep$ID==id] & all_bats$timestamp>=df_rep$start_rep2[df_rep$ID==id]]<-"post-lactating"}
+  
+}
+
+
+
+#save data
+data.table::fwrite(all_bats,"all_bats_aggregated.csv")
+
+
+
+```
+
+### 1.1 Data importation
+
+
+```{r}
+
+df_1min <- fread("all_bats_aggregated.csv", stringsAsFactors = T) # import data
+
+
+glimpse(df_1min)
+```
+
+### 1.2 Data wrangling
+
+```{r}
+df_1min$species<-as.character(df_1min$species)
+df_1min$species[df_1min$species=="Mbec"]<-"M.bechsteinii"
+df_1min$species[df_1min$species=="Nlei"]<-"N.leisleri"
+df_1min$species<-as.factor(df_1min$species)
+
+df_1min$month_f <- factor(month(df_1min$date))
+df_1min$year_f <- factor(df_1min$year)
+df_1min$date <- date(df_1min$date)
+df_1min$hour <- hour(df_1min$timestamp)
+df_1min$week <- week(df_1min$timestamp)
+
+min_set <- min(df_1min$time_to_set)
+max_set <- max(df_1min$time_to_set)
+df_1min$start.event <- ifelse(df_1min$time_to_set==min_set,T,F) # Identify start of the time series 
+df_1min$ydate_f <- as.factor(df_1min$ydate)
+df_1min$date_f <- as.factor(df_1min$date)
+
+K.time_of_day <- length(unique(df_1min$time_to_rise))
+
+df_1min <- df_1min %>% data.frame()
+```
+
+Exclude retagged individuals and extract sample sizes
+
+```{r}
+df_1min<- df_1min[!(df_1min$ID =="Nlei20211" & df_1min$ydate >= 200),]
+df_1min<- df_1min[!(df_1min$ID =="h146487" & df_1min$ydate >= 150),]
+
+# Sample sizes
+df_1min %>%
+  group_by(species) %>% 
+  summarise(nID = n_distinct(ID),
+            nObs = n(),
+            meanDays = mean(n_days))
+df_1min %>%
+  summarise(nID = n_distinct(ID),
+            nObs = n(),
+            meanDays = mean(n_days))
+```
+
+*NOTE* Some individuals were tagged twice within the same year. We want to avoid these situations and reduce the sampling period to the first tagging event. The full details of this analysis can be found under `filename`, section 0.2.
+
+### 1.3 Visual inspection
+We can plot visually inspect the data by presenting the probability of activity over time of the day. Here, it is easier to calculate this probability by time intervals of 15 minutes for easier viuslization 
+
+```{r}
+df_15min <- df_1min %>%
+  #filter(species == "M.bechsteinii" | species == "N.leisleri") %>%
+  mutate(interval = as_hms(floor_date(timestamp, unit = "15minutes"))) %>%
+  group_by(ID, species, year, ydate, hour, interval) %>%
+  summarise(n_intervals = length(activity), 
+            n_active = length(activity[activity == 1]),
+            n_passive = length(activity[activity == 0]), 
+            time_to_set = mean(time_to_set))  # calculate average time to sunset for that 15 minute interval
+
+df_15min %>%
+  ggplot(aes(x = time_to_set, y = n_active/n_intervals, color = species)) + 
+  geom_point(alpha = 0.1) +
+  geom_smooth() + scale_color_wsj() + theme_bw(14) + 
+  facet_wrap(~species) + geom_hline(yintercept = 0.5,linetype = "dashed") + 
+  ylim(0, 1) + ylab("Activity probability (15 min interval)") +
+  xlab("Time to sunset (h)")
+```
+
+We can also inspect each tagged individual in the same way
+```{r}
+df_15min %>%
+  filter(species == "N.leisleri") %>%
+  ggplot(aes(x = time_to_set, y = n_active/n_intervals)) + 
+  geom_point(alpha = 0.2) +
+  geom_smooth() + scale_color_wsj() + theme_bw(14) + 
+  facet_wrap(~ID) + geom_hline(yintercept = 0.5,linetype = "dashed") + 
+  ylim(0, 1) + ylab("Activity probability (15 min interval)") +
+  xlab("Time to sunset (h)")
+
+df_15min %>%
+  filter(species == "M.bechsteinii") %>%
+  ggplot(aes(x = time_to_set, y = n_active/n_intervals)) + 
+  geom_point(alpha = 0.2) +
+  geom_smooth() + scale_color_wsj() + theme_bw(14) + 
+  facet_wrap(~ID) + geom_hline(yintercept = 0.5,linetype = "dashed") + 
+  ylim(0, 1) + ylab("Activity probability (15 min interval)") +
+  xlab("Time to sunset (h)")
+```
+
+
+## 2. HGAM for species comparison of daily activity patterns
+We fit a Hierarchical Generalized Additive Model  to compare whether Bechstein's and Leisler's bats differ significantly in their daily activity patterns. We assume that the probability of activity is a non-linear function of time of the day, here centered around time of sunset (t = 0). 
+We use a binomial error term since our activity column is a string of 0 and 1 (i.e the bat is either marked as passive for that minute or active).
+
+### 2.1 Fit models
+We  use circular spline functions to constrain the activity probability to be equal at 00:00 and 23:59 (argument `bs = "cc"`). We also need to account for the fact that individuals were measured repeatedely but in differnet years of monitoring. The simplest way to do that is to include individuals and date as random intercepts with the argument `bs = "re"`. Note that there are many flavors for specifying random effects with HGAMs which apply more or less penalty to the random effects and allow them to deviate from population level trends. Here, we are mainly interested in species differences and assume that there is a general time of activity function that is species specific. Note that more complex random effect structures gave functionally similar results and did not affect conclusions. [Pedersen et al. 2021](https://peerj.com/articles/6876/) provides a great and exhasutive tutorials on the different ways to approach random effects within the GAM framework.
+There are two other arguments that require ou attention. First, we need to account for the fact that there observations are likely to be highly autocorrelated because they are taken at 1 min intervals. This value has to be set manually and we show our procedure for investigating autocorrelation in our analysis R script (see `filename`, section 1.1). Next, we need to select the degree of complexity of our smoothing terms: `k`. After inspection with the `k.check` function, setting k to 120 was the highest complexity we could set without overfitting the data (see `filename`, section 1.2 for details).
+
+To test for species difference in activity patterns, we fit two models. Model M0 assumes that both species have the same global activity patterns while model M1 allows both species to follow their own trend (argment `by = species` within the spline function)
+
+
+Set autocorrelation (`r1`) and basis dimension (`k`) of the smooth term
+
+```{r}
+r1 <- 0.5765725
+k <- 120
+
+```
+
+Fit model M0
+
+```{r}
+fit.gam.M0 <- bam(activity ~ 
+                    s(time_to_set, bs = c("cc"), k = k) +
+                    s(ID, bs = "re") + s(date_f, bs = "re"), 
+                  rho = r1, AR.start = start.event,
+                  data = df_1min, 
+                  method = "fREML", discrete=T, family = "binomial", 
+                  knots=list(time_to_rise=c(min_set, max_set)))
+summary(fit.gam.M0)
+#draw(fit.gam.M0)
+```
+
+Fit model M1
+```{r}
+fit.gam.M1 <- bam(activity ~ 
+                    s(time_to_set, bs = c("cc"), k = k, by = species) +
+                    s(ID, bs = "re") + s(date_f, bs = "re"), 
+                  rho = r1, AR.start = start.event,
+                  data = df_1min, 
+                  method = "fREML", discrete=T, family = "binomial", 
+                  knots=list(time_to_rise=c(min_set, max_set)))
+summary(fit.gam.M1)
+#draw(fit.gam.M1)
+```
+
+Compare M0 and M1
+
+```{r}
+anova(fit.gam.M0, fit.gam.M1)
+
+AIC(fit.gam.M0, fit.gam.M1) %>% 
+  mutate(delta.AIC = AIC - min(AIC)) %>% arrange(delta.AIC)
+```
+
+### 2.2 Plot models
+
+```{r}
+# Calculate hourly interval data
+df_1h <- df_1min %>%
+  mutate(interval = as_hms(floor_date(timestamp, unit = "60minutes"))) %>%
+  group_by(ID, species, year, ydate, hour, interval) %>%
+  summarise(n_intervals = length(activity), 
+            n_active = length(activity[activity == 1]),
+            n_passive = length(activity[activity == 0]), 
+            time_to_set = mean(time_to_set))  # calculate average time to sunset for that 15 minute interval
+df_1h$p_act <- df_1h$n_active/df_1h$n_intervals
+
+fit.values <- evaluate_smooth(fit.gam.M1, "s(time_to_set)", n = 244,
+                              overall_uncertainty = T,
+                              unconditional = T)
+draw(fit.values)
+
+b0 <- coef(fit.gam.M1)[1]
+Fig5 <- ggplot(data = fit.values, 
+                        aes(x = time_to_set, y = plogis(est+b0), 
+                            color = species, group = species))
+Fig5a <- Fig5 +
+  geom_point(data = df_1h, alpha = .1,
+             aes(x = time_to_set, 
+                 y = p_act)) +
+  geom_ribbon(aes(ymin = plogis(est+b0 - 2 * se) ,
+                  ymax = plogis(est+b0 + 2 * se)), 
+              fill = "grey", color = "grey") +
+  geom_line(size = .5) + 
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_color_wsj() + theme_bw(14) +
+  xlab("") + 
+  ylab("Activity probability \n") + 
+  ylim(0, 1) +
+  theme(legend.position = c(.1,.745))
+Fig5a
+
+fit.delta <- difference_smooths(fit.gam.M1, "s(time_to_set)", n = 244)
+
+Fig5b <- ggplot(data = fit.delta, 
+                    aes(x = time_to_set, y = diff)) +
+  geom_ribbon(aes(ymin = lower,
+                  ymax = upper), color = "grey",
+              alpha = 0.3) +
+  geom_line() + geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_bw(14) + theme(legend.position = "none") +
+  xlab("Time since sunset (h)") + 
+  ylab("Activity difference \n (M.bechsteinii - N.leisleri)")
+
+Fig5 <- Fig5a / Fig5b
+Fig5
+```
+
+### 2.3 Extract timing of activity values
+The following section shows how different aspects of the dialy activity patterns can be extracted from the HGAM output. We focus here on determining the timinig for onset and end of the daily activity period, the timing of peak activity and the intensity of activity during the night.
+```{r}
+# Onset of activity up time: When does p(activity) > 0.5 first
+# End of activity time: When does p(activity) > 0.5 last
+fit.values %>% group_by(species) %>% 
+  filter(plogis(est+b0) > .5) %>% 
+  summarise(a.onset = as_hms(min(time_to_set)*60),
+            a.end = as_hms(max(time_to_set)*60))
+# Peak activity: what are the two highest values for p(activity)?
+fit.values %>% group_by(species) %>% 
+  filter(plogis(est+b0) == max(plogis(est+b0))) %>% 
+  summarise(peak.a = max(plogis(est+b0)),
+            peak.a.low = plogis(est+b0-2*se),
+            peak.a.up = plogis(est+b0+2*se))
+
+# Peak activity timing: time of day whith maximum p(activity)
+fit.values %>% group_by(species) %>% 
+  filter(plogis(est+b0) == max(plogis(est+b0))) %>% 
+  group_by(species) %>%
+  summarise(t.peak = as_hms(time_to_set*60))
+
+# Activity density: area  under the curve when p(activity) > 0.5
+fit.values %>% group_by(species) %>% 
+  filter(plogis(est+b0) > .5) %>% 
+  summarise(auc = bayestestR::auc(time_to_set, plogis(est+b0), 
+                                  method = "spline"),
+            auc.low = bayestestR::auc(time_to_set, plogis(est+b0-2*se), 
+                                  method = "spline"),
+            auc.up = bayestestR::auc(time_to_set, plogis(est+b0+2*se), 
+                                  method = "spline"))
+
+
+```
+
+## 3. HGAM for comparing activity patterns reproductive periods
+We can also use HGAM to compare the timing of daily activity depending on the reproductive status of individuals within each species. The models used here are very similar to those used in section 2. with the main difference that we are now comparing a model that assumes a common activity pattern for all statuses (model 0) and one that allows reproductive statuses to have differing smoothing functions.
+
+Exclude individuals of unknown reproductive status
+```{r}
+df_1min %>% filter(rep.state != "unknown") %>% 
+  group_by(species) %>% 
+  summarise(nID = n_distinct(ID),
+            nObs = n())
+
+df_1min %>% filter(rep.state != "unknown") %>% 
+  group_by(species, rep.state) %>% 
+  summarise(nID = n_distinct(ID),
+            nObs = n())
+
+# Remove individuals of unknown status
+df_1min.Mb <- df_1min %>% filter(species == "M.bechsteinii" & rep.state != "unknown") %>% droplevels()
+df_1min.Nl <- df_1min %>% filter(species == "N.leisleri" & rep.state != "unknown") %>% droplevels()
+```
+
+### 3.1 Bechstein's bats
+
+```{r}
+fit.gam.Mb.0 <- bam(activity ~ 
+                      s(time_to_set, bs = c("cc"), k = k) +
+                      s(ID, bs = "re") + #, k = 25
+                      s(date_f, bs = "re"), #k = 173 
+                    rho = r1, AR.start = start.event,
+                    data = df_1min.Mb, 
+                    method = "fREML", discrete=T, family = "binomial", 
+                    knots=list(time_to_rise=c(min_set, max_set)))
+summary(fit.gam.Mb.0)
+
+### M1: difference in reproductive status on average & in smooth ----
+fit.gam.Mb.1 <- bam(activity ~ rep.state +
+                    s(time_to_set, bs = c("cc"), k = k, 
+                      by = rep.state) +
+                    s(ID, bs = "re") + s(date_f, bs = "re"), 
+                  rho = r1, AR.start = start.event,
+                  data = df_1min.Mb, 
+                  method = "fREML", discrete=T, family = "binomial", 
+                  knots=list(time_to_rise=c(min_set, max_set)))
+summary(fit.gam.Mb.1)
+
+AIC(fit.gam.Mb.0, fit.gam.Mb.1) %>% 
+  mutate(delta.AIC = AIC - min(AIC)) %>% arrange(delta.AIC)
+```
+
+
+
+### 3.2 Leisler' bats
+```{r}
+fit.gam.Nl.0 <- bam(activity ~ 
+                      s(time_to_set, bs = c("cc"), k = k) +
+                      s(ID, bs = "re") + s(date_f, bs = "re"), 
+                    rho = r1, AR.start = start.event,
+                    data = df_1min.Nl, 
+                    method = "fREML", discrete=T, family = "binomial", 
+                    knots=list(time_to_rise=c(min_set, max_set)))
+summary(fit.gam.Nl.0)
+
+fit.gam.Nl.1 <- bam(activity ~ rep.state +
+                      s(time_to_set, bs = c("cc"), k = k,
+                        by = rep.state) +
+                      s(ID, bs = "re") + s(date_f, bs = "re"), 
+                    rho = r1, AR.start = start.event,
+                    data = df_1min.Nl, 
+                    method = "fREML", discrete=T, family = "binomial", 
+                    knots=list(time_to_rise=c(min_set, max_set)))
+summary(fit.gam.Nl.1)
+
+AIC(fit.gam.Nl.0, fit.gam.Nl.1) %>% 
+  mutate(delta.AIC = AIC - min(AIC)) %>% arrange(delta.AIC)
+```
+
+### 3.3 Plot figure
+```{r}
+fit.values.Mb <- evaluate_smooth(fit.gam.Mb.1, "s(time_to_set)", n = 244,
+                                 overall_uncertainty = T,
+                                 unconditional = T)
+
+fit.values.Nl <- evaluate_smooth(fit.gam.Nl.1, "s(time_to_set)", n = 244,
+                                 overall_uncertainty = T,
+                                 unconditional = T)
+
+b0 <- coef(fit.gam.Mb.1)[1]
+Fig6a <- ggplot(data = fit.values.Mb, 
+       aes(x = time_to_set, y = plogis(est+b0), 
+           fill = rep.state, group = rep.state)) +
+  geom_ribbon(aes(ymin = plogis(est+b0 - 2 * se) ,
+                  ymax = plogis(est+b0 + 2 * se)),
+              alpha = .5) +
+  geom_line(size = .5) + 
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_fill_wsj() + theme_bw(14) +
+  #facet_wrap(~rep.state) +
+  xlab("time since sunset (h)") + 
+  ylab("Activity probability \n") + 
+  ylim(0, 1) +
+  #theme(legend.position = "none") +
+  theme(legend.position = c(.15,.745),
+        legend.title=element_blank()) +
+  ggtitle("M.bechsteinii")
+
+b0 <- coef(fit.gam.Nl.1)[1]
+Fig6b <- ggplot(data = fit.values.Nl, 
+       aes(x = time_to_set, y = plogis(est+b0), 
+           fill = rep.state, group = rep.state)) +
+  geom_ribbon(aes(ymin = plogis(est+b0 - 2 * se) ,
+                  ymax = plogis(est+b0 + 2 * se)),
+              alpha = .5) +
+  geom_line(size = .5) + 
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  scale_fill_wsj() + theme_bw(14) +
+  #facet_wrap(~rep.state) +
+  xlab("time since sunset (h)") + 
+  ylab("Activity probability \n") + 
+  ylim(0, 1) +
+  #theme(legend.position = "none") +
+  theme(legend.position = "none") +
+  ggtitle("N.leisleri")
+
+Fig6 <- Fig6a + Fig6b
+Fig6
+```
+
